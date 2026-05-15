@@ -11,5 +11,7 @@ services:
         value: false
       - key: SECRET_KEY
         value: biagiotti-demo-secret-2026
+      - key: API_BASE_URL
+        value: https://biagiotti-intelligence-jto5.onrender.com
       - key: PYTHON_VERSION
         value: "3.11.0"

@@ -2,7 +2,7 @@
  * assets/api.js — Centralized API calls for Cosmetic Intelligence
  */
 
-const API_BASE = 'https://biagiotti-intelligence.onrender.com';
+const API_BASE = 'https://biagiotti-intelligence-jto5.onrender.com';
 
 function _authHeaders() {
   const token = localStorage.getItem('token');

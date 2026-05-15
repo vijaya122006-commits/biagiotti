@@ -75,6 +75,41 @@ PRODUCTS = [
     ("P048","Retinol Eye Serum","Biagiotti Science","Eye Care",1699,680,"Retinol 0.1%, Peptides, Caffeine, Hyaluronic Acid, Vitamin E","Mature Skin",84.0),
     ("P049","Almond & Milk Body Lotion","Pure Essence","Body Care",649,260,"Sweet Almond Oil, Milk Protein, Shea Butter, Vitamin E, Glycerin","All Skin Types",98.0),
     ("P050","Bhringraj Hair Oil","Silky Strands","Hair Care",549,220,"Bhringraj Extract, Coconut Oil, Amla, Brahmi, Castor Oil","All Hair Types",99.0),
+    # 30 MORE PRODUCTS (P051-P080)
+    # --- 5 UNSAFE products (safety < 70, harmful ingredients) ---
+    ("P051","Fair & Glow Whitening Cream","FairSkin","Treatment",599,220,"Hydroquinone 2%, Mercury Compound, Parabens, Fragrance","All Skin Types",42.0),
+    ("P052","Bleach Brightening Cream","QuickFair","Treatment",449,160,"Ammonium Persulfate, Formaldehyde, Sodium Lauryl Sulfate","Oily, Normal",38.0),
+    ("P053","Chemical Hair Relaxer","StraightPro","Hair Care",899,360,"Formaldehyde 3%, Sodium Hydroxide, Mineral Oil, Parabens","All Hair Types",35.0),
+    ("P054","Anti-Ageing Fairness Serum","AgelessFair","Serum",1299,520,"Hydroquinone, Tretinoin, Methylparaben, Propylparaben","Mature Skin",45.0),
+    ("P055","Instant Glow Face Pack","GlowNow","Mask",349,140,"Mercury Chloride, Bleaching Agents, Formaldehyde","All Skin Types",32.0),
+    # --- 5 UNDERSTOCK (popular, running low) ---
+    ("P056","Saffron Glow Face Cream","Pure Essence","Moisturizer",799,320,"Saffron Extract, Vitamin C, Hyaluronic Acid, Aloe Vera","All Skin Types",94.0),
+    ("P057","Green Tea Antioxidant Serum","Glow Lab","Serum",1199,480,"Green Tea Extract, EGCG, Vitamin E, Niacinamide, Glycerin","All Skin Types",96.0),
+    ("P058","Papaya Enzyme Cleanser","Deep Clean","Cleanser",499,200,"Papaya Extract, AHA, Glycerin, Aloe Vera, Panthenol","Normal, Combination",91.0),
+    ("P059","Rose Hip Overnight Cream","Biagiotti Luxe","Moisturizer",1399,560,"Rose Hip Oil, Retinol 0.1%, Peptides, Ceramides, Vitamin E","Dry, Mature",89.0),
+    ("P060","Charcoal Peel Off Mask","Clear Skin","Mask",549,220,"Activated Charcoal, PVA, Tea Tree Oil, Witch Hazel, Zinc","Oily, Combination",88.0),
+    # --- 5 OVERSTOCK (luxury, slow moving) ---
+    ("P061","Luxury Gold Face Serum","Biagiotti Luxe","Serum",2999,1200,"Gold Peptides, Collagen, Hyaluronic Acid, Vitamin C, Squalane","Mature, Dry",97.0),
+    ("P062","Diamond Glow Moisturizer","Biagiotti Luxe","Moisturizer",2499,1000,"Diamond Powder, Ceramides, Peptides, Rose Hip, Vitamin E","Mature, Normal",96.0),
+    ("P063","Platinum Anti-Ageing Cream","Biagiotti Science","Treatment",3499,1400,"Platinum Peptides, Retinol 0.5%, Vitamin C, Collagen, Ceramides","Mature Skin",90.0),
+    ("P064","Pearl Radiance Eye Cream","Biagiotti Luxe","Eye Care",1999,800,"Pearl Extract, Caffeine, Peptides, Hyaluronic Acid, Vitamin K","Mature, All Types",95.0),
+    ("P065","Caviar Repair Hair Mask","Silky Strands","Hair Care",1799,720,"Caviar Extract, Keratin, Argan Oil, Biotin, Silk Proteins","Dry, Damaged Hair",98.0),
+    # --- 15 NORMAL stock, diverse categories ---
+    ("P066","Turmeric Glow Face Wash","Glow Lab","Cleanser",399,160,"Turmeric Extract, Neem, Aloe Vera, Glycerin, Panthenol","All Skin Types",97.0),
+    ("P067","Aloe Vera Soothing Gel","Pure Essence","Moisturizer",349,140,"Aloe Vera 99%, Allantoin, Panthenol, Glycerin","Sensitive, All Types",99.0),
+    ("P068","SPF 30 Daily Moisturizer","Safe Shield","Suncare",699,280,"Zinc Oxide, Niacinamide, Hyaluronic Acid, Ceramides, Vitamin E","All Skin Types",90.0),
+    ("P069","Glycolic Acid Toner","Biagiotti Science","Toner",899,360,"Glycolic Acid 7%, Aloe Vera, Hyaluronic Acid, Panthenol","Dull, Uneven Skin",85.0),
+    ("P070","Nourishing Foot Cream","Pure Essence","Body Care",449,180,"Urea 10%, Shea Butter, Tea Tree Oil, Aloe Vera, Vitamin E","All Skin Types",96.0),
+    ("P071","Mango Butter Lip Balm","Petal Fresh","Lip Care",299,120,"Mango Butter, Beeswax, Vitamin E, Coconut Oil, Honey Extract","All Lip Types",98.0),
+    ("P072","Protein Hair Conditioner","Silky Strands","Hair Care",599,240,"Wheat Protein, Silk Amino Acids, Argan Oil, Panthenol, Glycerin","All Hair Types",94.0),
+    ("P073","Anti-Pollution Face Mist","Glow Lab","Toner",799,320,"Antioxidant Complex, Rose Water, Hyaluronic Acid, Vitamin C","Urban Skin",93.0),
+    ("P074","Mineral Sunscreen SPF 50","Safe Shield","Suncare",1199,480,"Zinc Oxide 20%, Titanium Dioxide, Aloe Vera, Vitamin E","Sensitive, All Types",96.0),
+    ("P075","Bakuchiol Retinol Alternative","Biagiotti Science","Serum",1699,680,"Bakuchiol 1%, Niacinamide, Hyaluronic Acid, Ceramides, Peptides","Sensitive, Mature",98.0),
+    ("P076","Mandelic Acid Exfoliator","Biagiotti Science","Treatment",1099,440,"Mandelic Acid 10%, Aloe Vera, Panthenol, Hyaluronic Acid","Sensitive, Acne-Prone",87.0),
+    ("P077","Coconut Milk Hair Serum","Silky Strands","Hair Care",699,280,"Coconut Milk, Argan Oil, Vitamin E, Silk Proteins, Glycerin","Frizzy, Dry Hair",97.0),
+    ("P078","Licorice Brightening Cream","Glow Lab","Moisturizer",999,400,"Licorice Extract, Niacinamide, Vitamin C, Hyaluronic Acid","Hyperpigmented",95.0),
+    ("P079","Azelaic Acid Glow Serum","Biagiotti Science","Serum",1299,520,"Azelaic Acid 10%, Niacinamide 5%, Hyaluronic Acid, Aloe Vera","Acne-Prone, Rosacea",91.0),
+    ("P080","Amla & Hibiscus Hair Rinse","Silky Strands","Hair Care",499,200,"Amla Extract, Hibiscus, Bhringraj, Brahmi, Aloe Vera","All Hair Types",99.0),
 ]
 
 REVIEWS_POS = [
@@ -149,8 +184,22 @@ def make_db():
                     country="India", label="Retail", is_verified=True))
                 cat_counts[cat] = cat_counts.get(cat, 0) + 1
 
-                is_low = (i % 5 == 0)
-                stock = rng.randint(8, 30) if is_low else rng.randint(60, 220)
+                # Stock control using pid for explicit demo scenarios
+                if pid in ("P056","P057","P058","P059","P060","P051","P052","P053","P054","P055"):
+                    stock = rng.randint(5, 25)    # understock + unsafe
+                elif pid in ("P061","P062","P063","P064","P065"):
+                    stock = rng.randint(180, 350) # luxury overstock
+                elif i < 10:
+                    stock = rng.randint(5, 28)    # first 10 understock
+                elif i < 15:
+                    stock = rng.randint(160, 300) # next 5 overstock
+                elif i % 7 == 0:
+                    stock = rng.randint(8, 35)
+                elif i % 9 == 0:
+                    stock = rng.randint(155, 250)
+                else:
+                    stock = rng.randint(55, 140)
+
                 db.session.add(Inventory(
                     product_id=pid, dealer_id=dealer_id,
                     current_stock=float(stock), reorder_level=50.0,
@@ -195,31 +244,49 @@ def make_db():
 
                 avg_r = round(sum(ratings)/len(ratings),2)
                 avg_s = round(sum(sentiments)/len(sentiments),3)
-                fore  = [int(monthly[-1]*(1+0.05*i)) for i in range(1,7)]
+                fore  = [int(monthly[-1]*(1+0.05*j)) for j in range(1,7)]
                 days_out = round(stock/max(1,monthly[-1]/30),1)
-                risk  = "HIGH" if days_out<14 else ("MEDIUM" if days_out<30 else "LOW")
-                ss_status = "Safe" if safety>=85 else ("Moderate" if safety>=70 else "Unsafe")
-                if safety < 70: n_harmful += 1
+
+                # FIXED: correct lowercase values matching DB query filters
+                if safety < 70:
+                    risk_lvl = 'high'
+                    harmful_json = json.dumps([{"name": ingr.split(',')[0].strip(), "severity": "high"}])
+                    n_harmful += 1
+                elif safety < 85:
+                    risk_lvl = 'medium'
+                    harmful_json = json.dumps([])
+                else:
+                    risk_lvl = 'none'
+                    harmful_json = json.dumps([])
+
+                stock_st   = 'understock' if stock < 50 else ('overstock' if stock > 150 else 'normal')
+                trend_st   = 'increasing' if fore[-1] > monthly[-1]*1.02 else 'stable'
+                sout_risk  = 'HIGH' if days_out < 14 else ('MEDIUM' if days_out < 30 else 'LOW')
+                ss_status  = 'Safe' if safety >= 85 else ('Moderate' if safety >= 70 else 'Unsafe')
 
                 if stock < 50:
                     alert_list.append({"type":"low_stock","product":pname,
                         "message":f"Only {stock} units. Reorder now.","severity":"high"})
+                if safety < 70:
+                    alert_list.append({"type":"safety","product":pname,
+                        "message":"Contains harmful ingredients. Review before reorder.",
+                        "severity":"critical"})
 
                 db.session.add(AnalysisResult(
                     product_id=pid, dealer_id=dealer_id,
                     demand_forecast_json=json.dumps({"forecast":fore,"months":6}),
-                    forecast_trend="up" if fore[-1]>monthly[-1] else "stable",
-                    stock_status="Low Stock" if stock<50 else ("Overstocked" if stock>150 else "Healthy"),
-                    days_until_stockout=days_out, stockout_risk=risk,
+                    forecast_trend=trend_st,
+                    stock_status=stock_st,
+                    days_until_stockout=days_out, stockout_risk=sout_risk,
                     skin_type_detected=skin, skin_confidence=round(rng.uniform(0.75,0.98),2),
-                    harmful_ingredients_json=json.dumps([]),
-                    safety_score=safety, safety_status=ss_status, risk_level=risk,
-                    stock_decision="RESTOCK" if stock<50 else "HOLD",
-                    decision_reason="Below reorder level" if stock<50 else "Stock adequate",
+                    harmful_ingredients_json=harmful_json,
+                    safety_score=safety, safety_status=ss_status, risk_level=risk_lvl,
+                    stock_decision='RESTOCK' if stock<50 else ('CLEAR' if stock>150 else 'HOLD'),
+                    decision_reason='Below reorder level' if stock<50 else ('Excess stock - consider discount' if stock>150 else 'Stock adequate'),
                     priority_score=round(rng.uniform(0.5,0.99),2),
                     recommendations_json=json.dumps([{"action":"Monitor demand","priority":"MEDIUM"}]),
                     avg_rating=avg_r, review_count=len(ratings),
-                    sentiment_avg=avg_s, verification_status="verified",
+                    sentiment_avg=avg_s, verification_status='verified',
                     analyzed_at=datetime.utcnow()))
 
                 top_list.append({"product_id":pid,"product_name":pname,"brand":brand,

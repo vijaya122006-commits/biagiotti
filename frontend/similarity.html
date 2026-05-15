@@ -327,7 +327,7 @@
 
     /* ── Autocomplete ───────────────────────────────────────────── */
     function resolveByName(name, cb) {
-        fetch('' + ((window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') ? window.location.origin : 'http://localhost:5050') + '/api/products/search?q=' + encodeURIComponent(name) + '&limit=1')
+        fetch('' + 'https://biagiotti-intelligence-jto5.onrender.com' + '/api/products/search?q=' + encodeURIComponent(name) + '&limit=1')
             .then(function(r) { return r.json(); })
             .then(function(j) {
                 var items = j.data || [];
@@ -344,7 +344,7 @@
     }
 
     function fetchAC(q) {
-        fetch('' + ((window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') ? window.location.origin : 'http://localhost:5050') + '/api/products/search?q=' + encodeURIComponent(q) + '&limit=8')
+        fetch('' + 'https://biagiotti-intelligence-jto5.onrender.com' + '/api/products/search?q=' + encodeURIComponent(q) + '&limit=8')
             .then(function(r) { return r.json(); })
             .then(function(j) { renderAC(j.data || [], q); })
             .catch(function() { closeAC(); });
@@ -503,7 +503,7 @@
     window._simSafety = async function(id, name, ingPreview) {
         var ing = ingPreview || '';
         try {
-            var res  = await fetch('' + ((window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') ? window.location.origin : 'http://localhost:5050') + '/api/pipeline/product/' + encodeURIComponent(id));
+            var res  = await fetch('' + 'https://biagiotti-intelligence-jto5.onrender.com' + '/api/pipeline/product/' + encodeURIComponent(id));
             var json = await res.json();
             if (json.status === 'success' && json.data && json.data.ingredients) {
                 ing = json.data.ingredients;
@@ -559,7 +559,7 @@
                 var productId   = (selectedProduct && selectedProduct.product_id)   || '';
                 var ingredients = (selectedProduct && selectedProduct.ingredients)   || '';
 
-                var res = await fetch('' + ((window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') ? window.location.origin : 'http://localhost:5050') + '/api/pipeline/smart-similarity', {
+                var res = await fetch('' + 'https://biagiotti-intelligence-jto5.onrender.com' + '/api/pipeline/smart-similarity', {
                     method:  'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -579,7 +579,7 @@
 
                 /* if mode is still no_ingredients but we have ing data, retry with /similar-by-ingredients */
                 if (payload.mode === 'no_ingredients' && ingredients) {
-                    var res2 = await fetch('' + ((window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') ? window.location.origin : 'http://localhost:5050') + '/api/pipeline/similar-by-ingredients', {
+                    var res2 = await fetch('' + 'https://biagiotti-intelligence-jto5.onrender.com' + '/api/pipeline/similar-by-ingredients', {
                         method:  'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({

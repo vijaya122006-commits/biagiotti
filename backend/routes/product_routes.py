@@ -295,11 +295,16 @@ def get_product_analysis(product_id):
     except Exception:
         pass  # fall back to stored harmful list
 
-    # Parse forecast
+    # Parse forecast — stored either as a list or as {"forecast":[...],"months":N}
     forecast = []
     if analysis and analysis.demand_forecast_json:
         try:
-            forecast = json.loads(analysis.demand_forecast_json)
+            raw = json.loads(analysis.demand_forecast_json)
+            # Handle both formats: plain list OR {"forecast": [...], "months": N}
+            if isinstance(raw, list):
+                forecast = raw
+            elif isinstance(raw, dict):
+                forecast = raw.get('forecast', raw.get('values', []))
         except Exception:
             pass
 

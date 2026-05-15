@@ -1192,7 +1192,11 @@
       // ── Chart Data Assembly ──────────────────────────────────────────
       // API returns: fc.values = number[] (forecast), fc.history = number[] (past)
       // d.sales_history = [{year, month, units_sold}] (real DB rows)
-      const fcVals = fc.values || fc.forecast || [];        // forecast numbers
+      const fcRaw = fc.values;
+      // Handle: plain array, or dict {"forecast":[...],"months":N}, or empty
+      const fcVals = Array.isArray(fcRaw) ? fcRaw
+                   : (fcRaw && Array.isArray(fcRaw.forecast)) ? fcRaw.forecast
+                   : (fc.forecast || []);
       const fcHist = fc.history || [];                        // plain monthly numbers array
       const salesHist = d.sales_history || [];                 // [{year,month,units_sold}]
       const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];

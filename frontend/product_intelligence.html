@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Intelligence Dashboard - Biagiotti</title>
+    <link rel="stylesheet" href="assets/theme.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        :root {
+            --glass: rgba(255, 255, 255, 0.8);
+            --card-shadow: 0 8px 32px rgba(31, 38, 135, 0.07);
+        }
+
+        body { background: #fdfbff; color: #2c3e50; }
+
+        .search-hero { padding: 3rem 0; text-align: center; background: linear-gradient(135deg, #fff, #f8f0ff); border-radius: 0 0 50px 50px; margin-bottom: 2rem; box-shadow: var(--card-shadow); }
+        .search-box { max-width: 600px; margin: 1.5rem auto; position: relative; }
+        .search-input { width: 100%; padding: 1.2rem 1.5rem; border: none; border-radius: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); font-size: 1.1rem; outline: none; }
+        .search-btn { position: absolute; right: 10px; top: 10px; background: var(--primary); color: #fff; border: none; padding: 0.6rem 1.5rem; border-radius: 20px; cursor: pointer; }
+
+        .upload-section { margin-top: 1rem; font-size: 0.9rem; }
+        .file-label { color: var(--primary); cursor: pointer; text-decoration: underline; font-weight: 700; }
+
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
+        .product-card { background: var(--glass); backdrop-filter: blur(4px); border-radius: 20px; padding: 1.5rem; box-shadow: var(--card-shadow); border: 1px solid rgba(255,255,255,0.18); transition: transform 0.2s; display: flex; flex-direction: column; }
+        .product-card:hover { transform: translateY(-5px); }
+        .product-title { font-size: 1.2rem; font-weight: 800; margin-bottom: 0.5rem; color: #34495e; }
+        .product-ing { font-size: 0.85rem; color: #7f8c8d; line-height: 1.4; max-height: 4.2em; overflow: hidden; position: relative; margin-bottom: 1rem; }
+        .product-ing::after { content: ""; position: absolute; bottom: 0; right: 0; width: 100%; height: 1em; background: linear-gradient(transparent, #fff); }
+        
+        .card-actions { margin-top: auto; display: flex; gap: 10px; }
+        .btn-analyze { flex: 1; background: var(--primary); color: #fff; border: none; padding: 0.7rem; border-radius: 12px; font-weight: 700; cursor: pointer; }
+
+        /* Analysis Side Panel */
+        .side-panel { position: fixed; right: -450px; top: 0; width: 450px; height: 100%; background: #fff; box-shadow: -10px 0 30px rgba(0,0,0,0.1); z-index: 1000; transition: right 0.3s ease; padding: 2rem; overflow-y: auto; }
+        .side-panel.open { right: 0; }
+        .close-panel { position: absolute; left: 1rem; top: 1rem; font-size: 1.5rem; cursor: pointer; }
+
+        .analysis-card { background: #f8faff; border-radius: 15px; padding: 1.2rem; margin-bottom: 1rem; }
+        .analysis-type { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: #95a5a6; margin-bottom: 0.5rem; display: block; }
+        .analysis-val { font-size: 1.1rem; font-weight: 800; color: #2c3e50; }
+        
+        .badge { display: inline-block; padding: 0.25rem 0.7rem; border-radius: 20px; font-size: 0.8rem; font-weight: 700; }
+        .badge-safe { background: #e8f5e9; color: #2e7d32; }
+        .badge-warn { background: #fff3e0; color: #ef6c00; }
+        .badge-danger { background: #ffebee; color: #c62828; }
+
+        .empty-state { grid-column: 1 / -1; text-align: center; padding: 4rem; color: #bdc3c7; }
+        .spinner { animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="dashboard.html" class="brand-logo"><i class="fa-solid fa-leaf"></i> Biagiotti</a>
+            <ul class="nav-links">
+                <li><a href="dashboard.html">Home</a></li>
+                <li><a href="product_intelligence.html" class="active">Product Intelligence</a></li>
+                <li><a href="forecast.html">Demand Hub</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="search-hero">
+        <div class="container">
+            <h1>Master Product Intelligence</h1>
+            <p>Search, store, and analyze thousands of cosmetic products instantly.</p>
+            
+            <div class="search-box">
+                <input id="prodSearch" type="text" class="search-input" placeholder="Search by name or ingredient...">
+                <button id="searchBtn" class="search-btn">Search</button>
+            </div>
+
+            <div class="upload-section">
+                <span>Have a new product list? </span>
+                <label for="csvFile" class="file-label">Upload CSV</label>
+                <input type="file" id="csvFile" accept=".csv" style="display:none">
+                <span id="uploadStatus" style="margin-left: 10px; color: var(--primary); font-weight: 700;"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" style="padding-bottom: 5rem;">
+        <div id="resultsInfo" style="margin-bottom: 1rem; color: #7f8c8d; font-weight: 700;"></div>
+        <div id="productGrid" class="product-grid">
+            <div class="empty-state">
+                <i class="fa-solid fa-box-open fa-3x" style="margin-bottom: 1rem;"></i>
+                <p>No products loaded. Upload a CSV to get started.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analysis Side Panel -->
+    <div id="sidePanel" class="side-panel">
+        <i class="fa-solid fa-xmark close-panel" onclick="togglePanel(false)"></i>
+        <h2 id="analyzeTitle" style="margin-top: 1rem; line-height: 1.2;">Product Analysis</h2>
+        <p id="analyzeSub" style="color: #7f8c8d; font-size: 0.9rem; margin-bottom: 1.5rem;">AI Insight breakdown</p>
+
+        <div id="analysisContent">
+            <div style="text-align: center; padding: 3rem;">
+                <i class="fa-solid fa-circle-notch fa-spin fa-2x" style="color: var(--primary);"></i>
+                <p>AI is thinking...</p>
+            </div>
+        </div>
+
+        <button class="btn btn-outline btn-block" style="margin-top: 2rem;" onclick="togglePanel(false)">Close Analysis</button>
+    </div>
+
+    <script src="assets/pipeline.js"></script>
+    <script src="assets/api.js"></script>
+    <script src="assets/app.js"></script>
+    <script>
+        const grid = document.getElementById('productGrid');
+        const searchInput = document.getElementById('prodSearch');
+        const searchBtn = document.getElementById('searchBtn');
+        const fileInput = document.getElementById('csvFile');
+        const sidePanel = document.getElementById('sidePanel');
+
+        // On Load - Start with a clean, search-first state
+        window.addEventListener('load', () => {
+            // We NO LONGER fetch or render all products on load.
+            // This keeps the UI clean and fast as requested.
+            grid.innerHTML = `
+                <div class="empty-state">
+                    <i class="fa-solid fa-magnifying-glass fa-3x" style="margin-bottom: 1rem; opacity: 0.5;"></i>
+                    <p>Enter a product name or ingredient above to start your analysis.</p>
+                </div>
+            `;
+            document.getElementById('resultsInfo').textContent = 'Ready for search';
+        });
+
+        // Search - High Performance Search
+        searchBtn.addEventListener('click', async () => {
+            const q = searchInput.value.trim();
+            if (!q) {
+                Pipeline.toast('Please enter a search term', 'warning');
+                return;
+            }
+
+            // Show loading state instantly
+            grid.innerHTML = `
+                <div class="empty-state">
+                    <i class="fa-solid fa-circle-notch fa-spin fa-3x" style="color: var(--primary);"></i>
+                    <p style="margin-top:1rem;">Searching our intelligence database...</p>
+                </div>
+            `;
+            
+            try {
+                const res = await fetch(`/api/products/search?q=${encodeURIComponent(q)}`).then(r => r.json());
+                
+                // Cache results in memory only for the current session's view
+                window._currentResults = res.data;
+                renderGrid(res.data);
+            } catch (e) {
+                console.error('Search failed:', e);
+                grid.innerHTML = `
+                    <div class="empty-state" style="color: var(--danger);">
+                        <i class="fa-solid fa-triangle-exclamation fa-3x"></i>
+                        <p>Search failed. Please ensure the backend server is running.</p>
+                    </div>
+                `;
+            }
+        });
+
+        // Upload
+        fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            document.getElementById('uploadStatus').textContent = 'Uploading...';
+            try {
+                const res = await fetch('/api/products/upload', {
+                    method: 'POST',
+                    body: formData
+                }).then(r => r.json());
+
+                if (res.status === 'success') {
+                    document.getElementById('uploadStatus').textContent = 'Success! ' + res.message;
+                    fetchProducts(); // Refresh
+                } else {
+                    document.getElementById('uploadStatus').textContent = 'Error: ' + res.message;
+                }
+            } catch (e) {
+                document.getElementById('uploadStatus').textContent = 'Upload failed.';
+            }
+        });
+
+        async function fetchProducts() {
+            try {
+                const res = await fetch('/api/products/all').then(r => r.json());
+                localStorage.setItem('bt_all_products', JSON.stringify(res.data));
+                renderGrid(res.data);
+            } catch (e) { console.error(e); }
+        }
+
+        function renderGrid(products) {
+            document.getElementById('resultsInfo').textContent = `${products.length} Products Found`;
+            if (products.length === 0) {
+                grid.innerHTML = '<div class="empty-state"><p>No products match your search.</p></div>';
+                return;
+            }
+            grid.innerHTML = products.map(p => `
+                <div class="product-card">
+                    <div class="product-title">${p.product_name}</div>
+                    <div class="product-ing">${p.ingredients}</div>
+                    <div class="card-actions">
+                        <button class="btn-analyze" onclick="runAnalysis('${p.id}')">Analyze AI</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function togglePanel(open) {
+            sidePanel.classList.toggle('open', open);
+        }
+
+        async function runAnalysis(id) {
+            const db = JSON.parse(localStorage.getItem('bt_all_products') || '[]');
+            const prod = db.find(x => x.id === id);
+            
+            togglePanel(true);
+            document.getElementById('analyzeTitle').textContent = prod ? prod.product_name : 'Product Analysis';
+            document.getElementById('analysisContent').innerHTML = `
+                <div style="text-align: center; padding: 3rem;">
+                    <i class="fa-solid fa-circle-notch fa-spin fa-2x" style="color: var(--primary);"></i>
+                    <p>AI Analysis in progress...</p>
+                </div>
+            `;
+
+            try {
+                const res = await fetch('/api/products/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ product_id: id })
+                }).then(r => r.json());
+
+                const an = res.analysis;
+                let html = '';
+
+                // Safety
+                if (an.safety) {
+                    const statusClass = an.safety.status === 'Safe' ? 'badge-safe' : (an.safety.status === 'Moderate' ? 'badge-warn' : 'badge-danger');
+                    html += `
+                        <div class="analysis-card">
+                            <span class="analysis-type">Ingredient Safety</span>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span class="analysis-val">${an.safety.safety_score}/100</span>
+                                <span class="badge ${statusClass}">${an.safety.status}</span>
+                            </div>
+                            <p style="font-size:0.8rem; color:#7f8c8d; margin-top:0.5rem;">${an.safety.recommendation}</p>
+                        </div>
+                    `;
+                }
+
+                // Skin Type
+                if (an.skin) {
+                    html += `
+                        <div class="analysis-card">
+                            <span class="analysis-type">Skin Type Match</span>
+                            <span class="analysis-val" style="color:var(--primary);">${an.skin.skin_type.toUpperCase()}</span>
+                            <p style="font-size:0.8rem; color:#7f8c8d; margin-top:0.5rem;">Confidence: ${Math.round(an.skin.confidence * 100)}%</p>
+                        </div>
+                    `;
+                }
+
+                // Sentiment
+                if (an.sentiment) {
+                    const sentIcon = an.sentiment.sentiment === 'positive' ? '😊' : (an.sentiment.sentiment === 'negative' ? '😞' : '😐');
+                    html += `
+                        <div class="analysis-card">
+                            <span class="analysis-type">User Sentiment</span>
+                            <span class="analysis-val">${sentIcon} ${an.sentiment.sentiment.toUpperCase()}</span>
+                            <p style="font-size:0.8rem; color:#7f8c8d; margin-top:0.5rem;">Analysis from review text provided in CSV.</p>
+                        </div>
+                    `;
+                }
+
+                document.getElementById('analysisContent').innerHTML = html || '<p>No analysis data available for this product.</p>';
+                
+                // Add Forecast Button if successful
+                if (html) {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn btn-primary btn-block';
+                    btn.style.marginTop = '1rem';
+                    btn.innerHTML = '<i class="fa-solid fa-chart-line"></i> View Demand Forecast';
+                    btn.onclick = () => {
+                        // Pass the full object to avoid network fetch on the next page
+                        Pipeline.setProduct(null, null, null, prod);
+                        location.href = 'forecast.html';
+                    };
+                    document.getElementById('analysisContent').appendChild(btn);
+                }
+            } catch (e) {
+                document.getElementById('analysisContent').innerHTML = '<p style="color:var(--danger);">Analysis failed. Backend error.</p>';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Live Database Sync — Biagiotti</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0d0f14;
+      --bg-card:   #13161e;
+      --bg-input:  #1a1e2a;
+      --border:    #252836;
+      --primary:   #7c5cfc;
+      --primary-d: #6345e8;
+      --accent:    #00d4aa;
+      --danger:    #ff5f6d;
+      --warn:      #ffc261;
+      --text:      #e8eaf0;
+      --muted:     #6b7280;
+      --radius:    14px;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Top bar ──────────────────────────────────── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 2rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-card);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text);
+      text-decoration: none;
+    }
+    .brand i { color: var(--primary); }
+    .back-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      transition: color 0.2s;
+    }
+    .back-btn:hover { color: var(--text); }
+
+    /* ── Main layout ──────────────────────────────── */
+    .main {
+      flex: 1;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 2rem;
+      padding: 3rem 2rem;
+    }
+
+    /* ── Card ─────────────────────────────────────── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+    }
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      color: var(--text);
+    }
+
+    /* ── Connection form ─────────────────────────── */
+    .form-card { width: 520px; }
+
+    .page-heading {
+      margin-bottom: 2rem;
+    }
+    .page-heading h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #fff 40%, var(--primary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.4rem;
+    }
+    .page-heading p {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    /* DB type selector */
+    .db-type-row {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1.75rem;
+    }
+    .db-tab {
+      flex: 1;
+      padding: 0.85rem 0.5rem;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+      background: var(--bg-input);
+    }
+    .db-tab:hover { border-color: var(--primary); }
+    .db-tab.active {
+      border-color: var(--primary);
+      background: rgba(124,92,252,.1);
+    }
+    .db-tab i { font-size: 1.5rem; display: block; margin-bottom: 0.3rem; }
+    .db-tab span { font-size: 0.8rem; font-weight: 600; }
+    .db-tab small { display: block; font-size: 0.68rem; color: var(--muted); margin-top: 0.15rem; }
+
+    /* Form inputs */
+    .form-group { margin-bottom: 1.1rem; }
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    input, select {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 0.65rem 0.9rem;
+      font-size: 0.9rem;
+      font-family: 'Inter', sans-serif;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+    input:focus, select:focus { border-color: var(--primary); }
+    input::placeholder { color: var(--muted); }
+    select option { background: var(--bg-card); }
+
+    .hint {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 0.35rem;
+      line-height: 1.4;
+    }
+    .hint strong { color: var(--accent); }
+
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .row-3-1 { display: grid; grid-template-columns: 3fr 1fr; gap: 0.75rem; }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 1.5rem 0;
+    }
+
+    /* Buttons */
+    .btn-row { display: flex; gap: 0.75rem; margin-top: 1.75rem; }
+    .btn {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      border: none;
+      transition: all 0.2s;
+    }
+    .btn-outline {
+      background: transparent;
+      border: 1.5px solid var(--border);
+      color: var(--text);
+    }
+    .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--primary-d); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── Status card ─────────────────────────────── */
+    .status-card { width: 340px; }
+
+    .connected-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+    .status-pill {
+      padding: 0.25rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .pill-idle    { background: rgba(107,114,128,.15); color: var(--muted); }
+    .pill-running { background: rgba(124,92,252,.15);  color: var(--primary); animation: pulse 1.5s infinite; }
+    .pill-done    { background: rgba(0,212,170,.15);   color: var(--accent); }
+    .pill-error   { background: rgba(255,95,109,.15);  color: var(--danger); }
+
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+    .stat-box {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.9rem 1rem;
+    }
+    .stat-box small { font-size: 0.73rem; color: var(--muted); display: block; margin-bottom: 0.25rem; }
+    .stat-box strong { font-size: 0.95rem; font-weight: 600; }
+
+    .error-box {
+      background: rgba(255,95,109,.08);
+      border: 1px solid rgba(255,95,109,.25);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-size: 0.82rem;
+      color: var(--danger);
+      margin-bottom: 1.25rem;
+    }
+
+    .action-btn {
+      width: 100%;
+      padding: 0.7rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 0.6rem;
+      border: none;
+      transition: all 0.2s;
+    }
+    .btn-sync {
+      background: transparent;
+      border: 1.5px solid var(--border);
+      color: var(--text);
+    }
+    .btn-sync:hover { border-color: var(--primary); color: var(--primary); }
+    .btn-disconnect {
+      background: transparent;
+      border: 1.5px solid rgba(255,95,109,.4);
+      color: var(--danger);
+    }
+    .btn-disconnect:hover { background: rgba(255,95,109,.08); }
+    .btn-dashboard {
+      background: var(--primary);
+      color: #fff;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    .btn-dashboard:hover { background: var(--primary-d); }
+
+    /* Security note */
+    .security-note {
+      margin-top: 1.5rem;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.1rem 1.25rem;
+    }
+    .security-note h4 {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .security-note h4 i { color: var(--accent); }
+    .security-note p {
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    /* ── Toast ───────────────────────────────────── */
+    #toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      padding: 0.85rem 1.4rem;
+      border-radius: 10px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #fff;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: all 0.35s ease;
+      pointer-events: none;
+      z-index: 9999;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast.success { background: #1a3d31; border: 1px solid var(--accent); color: var(--accent); }
+    #toast.error   { background: #3d1a1c; border: 1px solid var(--danger); color: var(--danger); }
+    #toast.info    { background: #1f1a3d; border: 1px solid var(--primary); color: var(--primary); }
+
+    @media (max-width: 900px) {
+      .main { flex-direction: column; align-items: center; }
+      .form-card, .status-card { width: 100%; max-width: 520px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <a href="dashboard.html" class="brand">
+      <i class="fa-solid fa-leaf"></i> Biagiotti
+    </a>
+    <a href="dashboard.html" class="back-btn">
+      <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+    </a>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- Left: Connection Form -->
+    <div class="card form-card">
+      <div class="page-heading">
+        <h1><i class="fa-solid fa-plug" style="font-size:1.2rem;"></i> Live Database Sync</h1>
+        <p>Connect your store's existing database for real-time intelligence updates.</p>
+      </div>
+
+      <!-- DB Type Selector -->
+      <div class="db-type-row">
+        <div class="db-tab active" data-type="postgresql">
+          <i class="fa-solid fa-database" style="color:#5b9bd5;"></i>
+          <span>PostgreSQL</span>
+        </div>
+        <div class="db-tab" data-type="mysql">
+          <i class="fa-solid fa-server" style="color:#00758f;"></i>
+          <span>MySQL</span>
+        </div>
+        <div class="db-tab" data-type="sqlite">
+          <i class="fa-solid fa-file-code" style="color:#9b59b6;"></i>
+          <span>SQLite</span>
+          <small>Local file</small>
+        </div>
+      </div>
+
+      <form id="connForm">
+
+        <!-- Host + Port (hidden for SQLite) -->
+        <div id="hostPortRow" class="row-3-1">
+          <div class="form-group">
+            <label>Host</label>
+            <input type="text" id="dbHost" placeholder="db.yourstore.com or 192.168.1.10" />
+          </div>
+          <div class="form-group">
+            <label>Port</label>
+            <input type="number" id="dbPort" value="5432" />
+          </div>
+        </div>
+
+        <!-- DB Name / File Path -->
+        <div class="form-group">
+          <label id="dbNameLabel">Database Name</label>
+          <input type="text" id="dbName" placeholder="e.g. store_inventory" />
+          <p class="hint" id="dbNameHint" style="display:none;">
+            📂 Enter the <strong>full absolute path</strong> to your .sqlite file.<br>
+            e.g. <strong>/Users/you/Desktop/dealer_store.sqlite</strong>
+          </p>
+        </div>
+
+        <!-- User / Pass (hidden for SQLite) -->
+        <div id="authRow" class="row-2">
+          <div class="form-group">
+            <label>Username</label>
+            <input type="text" id="dbUser" placeholder="read_only_user" />
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="dbPass" placeholder="••••••••" />
+          </div>
+        </div>
+
+        <hr class="divider" />
+
+        <div class="row-2">
+          <div class="form-group">
+            <label>Products Table</label>
+            <input type="text" id="productsTable" value="products" />
+          </div>
+          <div class="form-group">
+            <label>Sales Table</label>
+            <input type="text" id="salesTable" value="sales" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Sync Every</label>
+          <select id="syncInterval">
+            <option value="15">15 Minutes</option>
+            <option value="30" selected>30 Minutes</option>
+            <option value="60">1 Hour</option>
+            <option value="360">6 Hours</option>
+            <option value="1440">Daily</option>
+          </select>
+        </div>
+
+        <div class="btn-row">
+          <button type="button" id="testBtn" class="btn btn-outline">
+            <i class="fa-solid fa-vial"></i> Test Connection
+          </button>
+          <button type="submit" id="connectBtn" class="btn btn-primary">
+            <i class="fa-solid fa-link"></i> Connect & Sync
+          </button>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- Right: Status Panel -->
+    <div style="display:flex; flex-direction:column; gap:1.25rem;">
+
+      <!-- Active connection card (shown when connected) -->
+      <div class="card status-card" id="statusCard" style="display:none;">
+        <div class="connected-header">
+          <span class="card-title" style="margin:0;">Connection Active</span>
+          <span class="status-pill pill-idle" id="statusPill">IDLE</span>
+        </div>
+
+        <div class="stat-grid">
+          <div class="stat-box">
+            <small>Last Synced</small>
+            <strong id="lastSynced">Never</strong>
+          </div>
+          <div class="stat-box">
+            <small>Rows Imported</small>
+            <strong id="rowsImported">0</strong>
+          </div>
+          <div class="stat-box">
+            <small>DB Type</small>
+            <strong id="connDbType">—</strong>
+          </div>
+          <div class="stat-box">
+            <small>Next Sync</small>
+            <strong id="nextSync">—</strong>
+          </div>
+        </div>
+
+        <div class="error-box" id="errorBox" style="display:none;"></div>
+
+        <button class="action-btn btn-sync" id="syncNowBtn">
+          <i class="fa-solid fa-arrows-rotate"></i> Sync Now
+        </button>
+        <button class="action-btn btn-disconnect" id="disconnectBtn">
+          <i class="fa-solid fa-link-slash"></i> Disconnect
+        </button>
+        <a href="dashboard.html" class="action-btn btn-dashboard">
+          <i class="fa-solid fa-gauge-high"></i> Go to Dashboard →
+        </a>
+      </div>
+
+      <!-- Waiting state (show when not yet connected) -->
+      <div class="card status-card" id="waitingCard">
+        <div style="text-align:center; padding: 1.5rem 0;">
+          <i class="fa-solid fa-database" style="font-size:2.5rem; color:var(--border); margin-bottom:1rem; display:block;"></i>
+          <p style="color:var(--muted); font-size:0.875rem; line-height:1.6;">
+            Fill in your database credentials and click<br>
+            <strong style="color:var(--text);">Connect & Sync</strong> to begin live intelligence updates.
+          </p>
+        </div>
+      </div>
+
+      <!-- Security note -->
+      <div class="security-note">
+        <h4><i class="fa-solid fa-shield-halved"></i> How it works</h4>
+        <p>
+          Biagiotti connects in <strong style="color:var(--text);">read-only</strong> mode, pulls your products &amp; sales data, then runs the AI pipeline automatically. Your dashboard stays fresh without manual uploads.
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast"></div>
+
+  <script src="assets/pipeline.js"></script>
+  <script src="assets/app.js"></script>
+  <script>
+  (function () {
+    let selectedType = 'postgresql';
+
+    const tabs         = document.querySelectorAll('.db-tab');
+    const hostPortRow  = document.getElementById('hostPortRow');
+    const authRow      = document.getElementById('authRow');
+    const dbNameLabel  = document.getElementById('dbNameLabel');
+    const dbNameHint   = document.getElementById('dbNameHint');
+    const dbNameInput  = document.getElementById('dbName');
+    const dbPortInput  = document.getElementById('dbPort');
+
+    const statusCard   = document.getElementById('statusCard');
+    const waitingCard  = document.getElementById('waitingCard');
+    const statusPill   = document.getElementById('statusPill');
+    const lastSynced   = document.getElementById('lastSynced');
+    const rowsImported = document.getElementById('rowsImported');
+    const connDbType   = document.getElementById('connDbType');
+    const nextSync     = document.getElementById('nextSync');
+    const errorBox     = document.getElementById('errorBox');
+
+    // ── DB type tabs ────────────────────────────────
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        selectedType = tab.dataset.type;
+
+        const isSqlite = selectedType === 'sqlite';
+        hostPortRow.style.display = isSqlite ? 'none' : '';
+        authRow.style.display     = isSqlite ? 'none' : '';
+        dbNameLabel.textContent   = isSqlite ? 'SQLite File Path' : 'Database Name';
+        dbNameInput.placeholder   = isSqlite
+          ? '/Users/you/Desktop/dealer_store.sqlite'
+          : 'e.g. store_inventory';
+        dbNameHint.style.display  = isSqlite ? 'block' : 'none';
+
+        if (!isSqlite) {
+          dbPortInput.value = selectedType === 'postgresql' ? '5432' : '3306';
+        }
+      });
+    });
+
+    // ── Toast helper ────────────────────────────────
+    function toast(msg, type = 'info') {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.className = `show ${type}`;
+      clearTimeout(el._t);
+      el._t = setTimeout(() => { el.className = ''; }, 4000);
+    }
+
+    // ── Build payload ───────────────────────────────
+    function payload(extra = {}) {
+      return {
+        db_type:          selectedType,
+        host:             document.getElementById('dbHost').value.trim(),
+        port:             document.getElementById('dbPort').value,
+        db_name:          dbNameInput.value.trim(),
+        username:         document.getElementById('dbUser').value.trim(),
+        password:         document.getElementById('dbPass').value,
+        products_table:   document.getElementById('productsTable').value.trim(),
+        sales_table:      document.getElementById('salesTable').value.trim(),
+        sync_interval_min: document.getElementById('syncInterval').value,
+        ...extra,
+      };
+    }
+
+    // ── Test connection ─────────────────────────────
+    document.getElementById('testBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('testBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Testing…';
+      try {
+        const res  = await fetch(Pipeline.API_BASE + '/api/db-connect/test', {
+          method: 'POST', headers: Pipeline.getHeaders(), body: JSON.stringify(payload()),
+        });
+        const data = await res.json();
+        if (data.success) {
+          toast(`✅ ${data.message} — ${data.tables.length} tables found`, 'success');
+        } else {
+          toast(`❌ ${data.message}`, 'error');
+        }
+      } catch (e) {
+        toast('Request failed — is the server running?', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-vial"></i> Test Connection';
+      }
+    });
+
+    // ── Connect & Sync ──────────────────────────────
+    document.getElementById('connForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const btn = document.getElementById('connectBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Connecting…';
+      try {
+        const res  = await fetch(Pipeline.API_BASE + '/api/db-connect/save', {
+          method: 'POST', headers: Pipeline.getHeaders(), body: JSON.stringify(payload()),
+        });
+        const data = await res.json();
+        if (data.success) {
+          toast('Connected! First sync is running in background…', 'success');
+          checkStatus();
+        } else {
+          toast(`Failed: ${data.message}`, 'error');
+        }
+      } catch (e) {
+        toast('Request failed — is the server running?', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-link"></i> Connect & Sync';
+      }
+    });
+
+    // ── Manual sync ─────────────────────────────────
+    document.getElementById('syncNowBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('syncNowBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Syncing…';
+      try {
+        await fetch(Pipeline.API_BASE + '/api/db-connect/sync', {
+          method: 'POST', headers: Pipeline.getHeaders(),
+        });
+        toast('Sync started — check status in a moment.', 'info');
+        let n = 0;
+        const iv = setInterval(() => { checkStatus(); if (++n > 20) clearInterval(iv); }, 3000);
+      } catch (e) {
+        toast('Sync request failed.', 'error');
+      } finally {
+        setTimeout(() => {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> Sync Now';
+        }, 5000);
+      }
+    });
+
+    // ── Disconnect ──────────────────────────────────
+    document.getElementById('disconnectBtn').addEventListener('click', async () => {
+      if (!confirm('Disconnect this database? Real-time syncing will stop.')) return;
+      try {
+        await fetch(Pipeline.API_BASE + '/api/db-connect', {
+          method: 'DELETE', headers: Pipeline.getHeaders(),
+        });
+        toast('Database disconnected.', 'info');
+        checkStatus();
+      } catch (e) {
+        toast('Disconnect failed.', 'error');
+      }
+    });
+
+    // ── Status polling ──────────────────────────────
+    async function checkStatus() {
+      try {
+        const res  = await fetch(Pipeline.API_BASE + '/api/db-connect/status', {
+          headers: Pipeline.getHeaders(),
+        });
+        const data = await res.json();
+
+        if (data.connected) {
+          statusCard.style.display  = 'block';
+          waitingCard.style.display = 'none';
+
+          // Status pill
+          const s = (data.sync_status || 'idle').toLowerCase();
+          statusPill.textContent = s.toUpperCase();
+          statusPill.className   = `status-pill pill-${s}`;
+
+          // Stats
+          lastSynced.textContent   = data.last_synced_at
+            ? new Date(data.last_synced_at).toLocaleString() : 'Never';
+          rowsImported.textContent = (data.last_sync_rows || 0).toLocaleString();
+          connDbType.textContent   = (data.db_type || '').toUpperCase();
+          nextSync.textContent     = data.sync_interval_min
+            ? `${data.sync_interval_min} min` : '—';
+
+          // Error
+          if (data.last_error) {
+            errorBox.style.display = 'block';
+            errorBox.textContent   = data.last_error;
+          } else {
+            errorBox.style.display = 'none';
+          }
+
+          // Pre-fill form (read-only view)
+          document.getElementById('dbHost').value = data.host || '';
+          document.getElementById('dbPort').value = data.port || '';
+          dbNameInput.value = data.db_name || '';
+          document.getElementById('dbUser').value = data.username || '';
+          document.getElementById('productsTable').value = data.products_table || 'products';
+          document.getElementById('salesTable').value    = data.sales_table    || 'sales';
+          document.getElementById('syncInterval').value  = data.sync_interval_min || 30;
+
+          // Switch tab to correct DB type
+          const matchTab = [...tabs].find(t => t.dataset.type === data.db_type);
+          if (matchTab) matchTab.click();
+
+        } else {
+          statusCard.style.display  = 'none';
+          waitingCard.style.display = 'block';
+        }
+      } catch (e) {
+        // server not reachable — silent fail
+      }
+    }
+
+    checkStatus();
+    setInterval(checkStatus, 30000);
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account — Cosmetic Market Intelligence System</title>
+    <meta name="description" content="Create your Biagiotti dealer account to access AI-powered cosmetic market analytics.">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --primary:       #B76E79;
+            --primary-hover: #A15D67;
+            --primary-light: #FCE4EC;
+            --bg-body:       #FFFAFB;
+            --text-dark:     #2C2A2A;
+            --text-muted:    #7E7C7C;
+            --border:        #F0E1E4;
+            --safe:          #27AE60;
+            --safe-bg:       #EAF8F0;
+            --danger:        #D35400;
+            --font-head:     'Playfair Display', serif;
+            --font-body:     'Poppins', sans-serif;
+            --radius-sm:     10px;
+            --radius-md:     18px;
+            --radius-lg:     28px;
+            --shadow-lg:     0 20px 60px rgba(183,110,121,0.18);
+        }
+
+        html, body { height: 100%; }
+
+        body {
+            font-family: var(--font-body);
+            color: var(--text-dark);
+            background: linear-gradient(135deg, #fdf6ff 0%, #fff1f2 40%, #fef9f0 70%, #f0fff4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* ── Aurora blobs ───────────────────────── */
+        .blob { position: fixed; border-radius: 50%; filter: blur(80px); opacity: 0.3; pointer-events: none; }
+        .b1 { width: 420px; height: 420px; background: #d4c8f9; top: -100px; right: -80px; animation: d 15s ease-in-out infinite alternate; }
+        .b2 { width: 380px; height: 380px; background: #f9d4c8; bottom: -80px; left: -80px; animation: d 19s ease-in-out infinite alternate-reverse; }
+        @keyframes d { from { transform: translate(0,0); } to { transform: translate(20px,16px) scale(1.05); } }
+
+        /* ── Back link ─────────────────────────── */
+        .back-link {
+            position: absolute; top: 1.5rem; left: 1.75rem;
+            display: flex; align-items: center; gap: .5rem;
+            font-size: .85rem; color: var(--text-muted); text-decoration: none;
+            transition: color .2s;
+        }
+        .back-link:hover { color: var(--primary); }
+
+        /* ── Card ──────────────────────────────── */
+        .card {
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(24px);
+            border-radius: var(--radius-lg);
+            padding: 2.5rem;
+            width: 100%; max-width: 460px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid rgba(255,255,255,0.8);
+            animation: slideUp .6s cubic-bezier(.25,.8,.25,1) forwards;
+            opacity: 0; transform: translateY(20px);
+        }
+        @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
+
+        /* ── Logo ──────────────────────────────── */
+        .logo-wrap { text-align: center; margin-bottom: 1.75rem; }
+        .logo-mark {
+            width: 58px; height: 58px; border-radius: 16px;
+            background: var(--primary);
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 1.6rem; color: white; margin-bottom: .65rem;
+            box-shadow: 0 6px 20px rgba(183,110,121,.35);
+        }
+        .logo-wrap h1 { font-family: var(--font-head); font-size: 1.45rem; color: var(--text-dark); margin: 0 0 .2rem; }
+        .logo-wrap p  { font-size: .82rem; color: var(--text-muted); }
+
+        /* ── Step indicator ─────────────────────── */
+        .steps {
+            display: flex; align-items: center; justify-content: center;
+            gap: 0; margin-bottom: 1.75rem;
+        }
+        .step-dot {
+            width: 28px; height: 28px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: .75rem; font-weight: 600;
+            border: 2px solid var(--border); color: var(--text-muted);
+            background: white; transition: all .3s; flex-shrink: 0;
+        }
+        .step-dot.active { border-color: var(--primary); color: white; background: var(--primary); }
+        .step-dot.done   { border-color: var(--safe);    color: white; background: var(--safe); }
+        .step-line { width: 40px; height: 2px; background: var(--border); margin: 0 4px; transition: background .3s; }
+        .step-line.done { background: var(--safe); }
+
+        /* ── Form inputs ─────────────────────────── */
+        .form-group { margin-bottom: 1.1rem; }
+        .form-label { display: block; font-size: .85rem; font-weight: 500; margin-bottom: .4rem; color: var(--text-dark); }
+        .input-wrap { position: relative; }
+        .input-icon {
+            position: absolute; left: 1rem; top: 50%; transform: translateY(-50%);
+            color: var(--text-muted); font-size: .88rem; pointer-events: none;
+        }
+        .form-input {
+            width: 100%;
+            padding: .78rem 2.8rem .78rem 2.5rem;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: var(--font-body); font-size: .9rem;
+            background: var(--bg-body); color: var(--text-dark);
+            transition: all .2s; outline: none;
+        }
+        .form-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); background: white; }
+        .form-input.error { border-color: #ef4444; box-shadow: 0 0 0 3px #fee2e2; }
+        .form-input.success { border-color: var(--safe); box-shadow: 0 0 0 3px var(--safe-bg); }
+        .eye-btn {
+            position: absolute; right: .75rem; top: 50%; transform: translateY(-50%);
+            background: none; border: none; cursor: pointer; color: var(--text-muted);
+            font-size: .88rem; padding: .2rem;
+        }
+        .eye-btn:hover { color: var(--primary); }
+        .field-error { font-size: .75rem; color: #ef4444; margin-top: .3rem; display: none; }
+        .field-error.show { display: block; }
+
+        /* ── Password strength bar ───────────────── */
+        .strength-bar { margin-top: .5rem; }
+        .strength-track {
+            height: 4px; background: #f0e1e4; border-radius: 2px; overflow: hidden;
+        }
+        .strength-fill {
+            height: 100%; width: 0%; border-radius: 2px;
+            transition: width .3s, background .3s;
+        }
+        .strength-label { font-size: .72rem; margin-top: .25rem; font-weight: 500; }
+
+        /* ── Options ─────────────────────────────── */
+        .option-row {
+            display: flex; align-items: center; gap: .5rem;
+            font-size: .83rem; color: var(--text-muted);
+            margin-bottom: 1.1rem; cursor: pointer;
+        }
+        .option-row input { accent-color: var(--primary); }
+        .option-row a { color: var(--primary); text-decoration: none; }
+        .option-row a:hover { text-decoration: underline; }
+
+        /* ── Error / success messages ─────────────── */
+        .msg-box {
+            border-radius: 8px; padding: .65rem 1rem;
+            margin-bottom: 1rem; font-size: .83rem;
+            display: none; align-items: center; gap: .5rem;
+        }
+        .msg-box.error   { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; }
+        .msg-box.success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+        .msg-box.show    { display: flex; }
+
+        /* ── Buttons ────────────────────────────── */
+        .btn-row { display: flex; gap: .75rem; }
+        .submit-btn {
+            flex: 1; padding: .88rem; border: none; border-radius: var(--radius-sm);
+            background: var(--primary); color: white;
+            font-family: var(--font-body); font-weight: 600; font-size: .95rem;
+            cursor: pointer; transition: all .25s;
+            box-shadow: 0 4px 14px rgba(183,110,121,.3);
+            display: flex; align-items: center; justify-content: center; gap: .5rem;
+        }
+        .submit-btn:hover:not(:disabled) { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(183,110,121,.4); }
+        .submit-btn:disabled { opacity: .65; cursor: not-allowed; }
+        .submit-btn.success { background: var(--safe); }
+        .back-btn {
+            padding: .88rem 1.25rem; border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm); background: white; cursor: pointer;
+            font-family: var(--font-body); font-size: .9rem; color: var(--text-muted);
+            transition: all .2s; display: flex; align-items: center; gap: .4rem;
+        }
+        .back-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+        /* ── Divider / switch link ──────────────── */
+        .divider { position: relative; text-align: center; margin: 1.25rem 0; font-size: .8rem; color: var(--text-muted); }
+        .divider::before { content: ''; position: absolute; left: 0; top: 50%; width: 100%; height: 1px; background: var(--border); }
+        .divider span { background: rgba(255,255,255,.9); padding: 0 .75rem; position: relative; }
+        .login-link {
+            display: flex; align-items: center; justify-content: center; gap: .5rem;
+            width: 100%; padding: .72rem; border-radius: var(--radius-sm);
+            background: var(--primary-light); color: var(--primary);
+            font-weight: 600; font-size: .9rem; text-decoration: none;
+            border: 1.5px solid var(--primary-light); transition: all .2s;
+        }
+        .login-link:hover { border-color: var(--primary); }
+
+        /* ── Success screen ─────────────────────── */
+        .success-screen {
+            display: none; text-align: center; padding: 1rem 0;
+            animation: slideUp .5s ease forwards;
+        }
+        .success-screen.show { display: block; }
+        .success-icon {
+            width: 72px; height: 72px; border-radius: 50%;
+            background: var(--safe-bg); border: 3px solid var(--safe);
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 1.8rem; color: var(--safe); margin-bottom: 1.25rem;
+        }
+
+        @media (max-width: 480px) { .card { padding: 2rem 1.5rem; } }
+    </style>
+</head>
+<body>
+
+<div class="blob b1"></div>
+<div class="blob b2"></div>
+
+<a href="index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Home</a>
+
+<div class="card">
+
+    <!-- Logo -->
+    <div class="logo-wrap" id="cardLogo">
+        <div class="logo-mark"><i class="fa-solid fa-leaf"></i></div>
+        <h1>Create Account</h1>
+        <p>Start your 14-day free dealer trial</p>
+    </div>
+
+    <!-- Step indicator -->
+    <div class="steps" id="stepsBar">
+        <div class="step-dot active" id="s1">1</div>
+        <div class="step-line"       id="l1"></div>
+        <div class="step-dot"        id="s2">2</div>
+        <div class="step-line"       id="l2"></div>
+        <div class="step-dot"        id="s3"><i class="fa-solid fa-check" style="font-size:.65rem;"></i></div>
+    </div>
+
+    <!-- ── STEP 1 — Personal Info ────────────────────────────────── -->
+    <div id="step1">
+        <div class="msg-box error" id="step1Msg">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span id="step1MsgText"></span>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="fullName">Full Name <span style="color:var(--danger);">*</span></label>
+            <div class="input-wrap">
+                <i class="input-icon fa-solid fa-user"></i>
+                <input id="fullName" class="form-input" type="text" placeholder="Jane Doe" autocomplete="name">
+            </div>
+            <div class="field-error" id="nameErr">Please enter your full name.</div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="email">Email Address <span style="color:var(--danger);">*</span></label>
+            <div class="input-wrap">
+                <i class="input-icon fa-regular fa-envelope"></i>
+                <input id="email" class="form-input" type="email" placeholder="dealer@example.com" autocomplete="email">
+            </div>
+            <div class="field-error" id="emailErr">Please enter a valid email address.</div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="businessName">Business Name <span style="color:var(--text-muted);font-weight:400;font-size:.78rem;">(optional)</span></label>
+            <div class="input-wrap">
+                <i class="input-icon fa-solid fa-store"></i>
+                <input id="businessName" class="form-input" type="text" placeholder="Your Cosmetics Dealership" autocomplete="organization">
+            </div>
+        </div>
+
+        <button type="button" class="submit-btn" onclick="nextStep(1)">
+            Continue <i class="fa-solid fa-arrow-right"></i>
+        </button>
+
+        <div class="divider" style="margin-top:1.25rem;"><span>Already have an account?</span></div>
+        <a href="login.html" class="login-link">
+            <i class="fa-solid fa-sign-in-alt"></i> Sign In
+        </a>
+    </div>
+
+    <!-- ── STEP 2 — Security ─────────────────────────────────────── -->
+    <div id="step2" style="display:none;">
+        <div class="msg-box error" id="step2Msg">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span id="step2MsgText"></span>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="password">Password <span style="color:var(--danger);">*</span></label>
+            <div class="input-wrap">
+                <i class="input-icon fa-solid fa-lock"></i>
+                <input id="password" class="form-input" type="password" placeholder="Minimum 6 characters"
+                    autocomplete="new-password" oninput="checkStrength(this.value)">
+                <button type="button" class="eye-btn" onclick="togglePwd('password',this)" tabindex="-1">
+                    <i class="fa-regular fa-eye"></i>
+                </button>
+            </div>
+            <div class="strength-bar">
+                <div class="strength-track"><div class="strength-fill" id="strengthFill"></div></div>
+                <div class="strength-label" id="strengthLabel" style="color:var(--text-muted);">Enter a password to check strength</div>
+            </div>
+            <div class="field-error" id="pwdErr">Password must be at least 6 characters.</div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="confirmPwd">Confirm Password <span style="color:var(--danger);">*</span></label>
+            <div class="input-wrap">
+                <i class="input-icon fa-solid fa-shield-halved"></i>
+                <input id="confirmPwd" class="form-input" type="password" placeholder="Repeat your password"
+                    autocomplete="new-password">
+                <button type="button" class="eye-btn" onclick="togglePwd('confirmPwd',this)" tabindex="-1">
+                    <i class="fa-regular fa-eye"></i>
+                </button>
+            </div>
+            <div class="field-error" id="confirmErr">Passwords do not match.</div>
+        </div>
+
+        <label class="option-row">
+            <input type="checkbox" id="agreeTerms">
+            I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+        </label>
+
+        <div class="btn-row">
+            <button type="button" class="back-btn" onclick="goBack(1)">
+                <i class="fa-solid fa-arrow-left"></i> Back
+            </button>
+            <button type="button" class="submit-btn" onclick="nextStep(2)">
+                Create Account <i class="fa-solid fa-rocket"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- ── SUCCESS SCREEN ─────────────────────────────────────────── -->
+    <div class="success-screen" id="successScreen">
+        <div class="success-icon"><i class="fa-solid fa-check"></i></div>
+        <h2 style="font-family:var(--font-head);font-size:1.45rem;margin-bottom:.5rem;">Account Created!</h2>
+        <p style="color:var(--text-muted);font-size:.88rem;margin-bottom:1.5rem;line-height:1.7;">
+            Welcome aboard, <strong id="successName"></strong>!<br>
+            Your dealer account is ready. Redirecting to dashboard…
+        </p>
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:1rem;margin-bottom:1.5rem;font-size:.83rem;color:#166534;text-align:left;">
+            <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem;font-weight:600;">
+                <i class="fa-solid fa-circle-check"></i> Account Details
+            </div>
+            <div id="successDetails"></div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:.5rem;font-size:.83rem;color:var(--text-muted);">
+            <i class="fa-solid fa-spinner fa-spin" style="color:var(--primary);"></i>
+            Redirecting in <span id="countdown">3</span>s…
+        </div>
+        <a href="dashboard.html" style="display:inline-flex;align-items:center;gap:.5rem;margin-top:1rem;color:var(--primary);font-size:.85rem;font-weight:600;text-decoration:none;">
+            Go to Dashboard now <i class="fa-solid fa-arrow-right"></i>
+        </a>
+    </div>
+
+</div>
+
+<script>
+    var formData = {};
+    var currentStep = 1;
+
+    // ── Utilities ─────────────────────────────────────────────────
+    function togglePwd(id, btn) {
+        var inp  = document.getElementById(id);
+        var icon = btn.querySelector('i');
+        inp.type  = inp.type === 'password' ? 'text' : 'password';
+        icon.className = inp.type === 'text' ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
+    }
+
+    function setStepUI(step, done) {
+        // Dot states
+        for (var i = 1; i <= 3; i++) {
+            var dot  = document.getElementById('s' + i);
+            var line = document.getElementById('l' + i);
+            if (i < step || done) { dot.className = 'step-dot done'; }
+            else if (i === step)  { dot.className = 'step-dot active'; }
+            else                  { dot.className = 'step-dot'; }
+            if (line && (i < step || done)) { line.className = 'step-line done'; }
+            else if (line)                  { line.className = 'step-line'; }
+        }
+    }
+
+    function showErr(boxId, textId, msg) {
+        document.getElementById(boxId).className = 'msg-box error show';
+        document.getElementById(textId).textContent = msg;
+    }
+    function hideErr(boxId) {
+        document.getElementById(boxId).className = 'msg-box error';
+    }
+    function fieldErr(id, show) {
+        document.getElementById(id).classList.toggle('show', show);
+    }
+    function setInputState(id, state) {  // state: 'error' | 'success' | ''
+        var el = document.getElementById(id);
+        el.classList.remove('error','success');
+        if (state) el.classList.add(state);
+    }
+
+    // ── Password strength ─────────────────────────────────────────
+    function checkStrength(pwd) {
+        var fill  = document.getElementById('strengthFill');
+        var label = document.getElementById('strengthLabel');
+        if (!pwd) { fill.style.width = '0%'; label.textContent = 'Enter a password to check strength'; label.style.color = 'var(--text-muted)'; return; }
+        var score = 0;
+        if (pwd.length >= 6)  score++;
+        if (pwd.length >= 10) score++;
+        if (/[A-Z]/.test(pwd)) score++;
+        if (/[0-9]/.test(pwd)) score++;
+        if (/[^A-Za-z0-9]/.test(pwd)) score++;
+        var pct   = Math.round((score / 5) * 100);
+        var color = score <= 1 ? '#ef4444' : score <= 2 ? 'var(--warning)' : score <= 3 ? '#F9A825' : 'var(--safe)';
+        var text  = score <= 1 ? 'Weak' : score <= 2 ? 'Fair' : score <= 3 ? 'Good' : 'Strong';
+        fill.style.width      = pct + '%';
+        fill.style.background = color;
+        label.textContent     = 'Strength: ' + text;
+        label.style.color     = color;
+    }
+
+    // ── Next step ────────────────────────────────────────────────
+    function nextStep(from) {
+        if (from === 1) {
+            hideErr('step1Msg');
+            var name  = document.getElementById('fullName').value.trim();
+            var email = document.getElementById('email').value.trim();
+            var nameOk  = name.length > 0;
+            var emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+            setInputState('fullName', nameOk ? 'success' : 'error');
+            setInputState('email',    emailOk ? 'success' : 'error');
+            fieldErr('nameErr',  !nameOk);
+            fieldErr('emailErr', !emailOk);
+            if (!nameOk || !emailOk) { showErr('step1Msg','step1MsgText','Please correct the highlighted fields.'); return; }
+
+            formData.name  = name;
+            formData.email = email;
+            formData.business = document.getElementById('businessName').value.trim();
+
+            // Check email duplicate
+            try {
+                var stored = JSON.parse(localStorage.getItem('cmis_user') || 'null');
+                if (stored && stored.email === email) {
+                    showErr('step1Msg','step1MsgText','This email is already registered. Please login instead.');
+                    setInputState('email','error'); return;
+                }
+            } catch(_) {}
+
+            document.getElementById('step1').style.display = 'none';
+            document.getElementById('step2').style.display = 'block';
+            setStepUI(2, false);
+            currentStep = 2;
+        }
+
+        else if (from === 2) {
+            hideErr('step2Msg');
+            var pwd     = document.getElementById('password').value;
+            var confirm = document.getElementById('confirmPwd').value;
+            var agreed  = document.getElementById('agreeTerms').checked;
+            var pwdOk   = pwd.length >= 6;
+            var cwOk    = pwd === confirm && pwd.length > 0;
+            setInputState('password',   pwdOk ? 'success' : 'error');
+            setInputState('confirmPwd', cwOk  ? 'success' : 'error');
+            fieldErr('pwdErr',     !pwdOk);
+            fieldErr('confirmErr', !cwOk);
+            if (!pwdOk || !cwOk) { showErr('step2Msg','step2MsgText','Please check your password fields.'); return; }
+            if (!agreed) { showErr('step2Msg','step2MsgText','Please agree to the Terms of Service to continue.'); return; }
+
+            formData.password = pwd;
+            submitSignup();
+        }
+    }
+
+    function goBack(toStep) {
+        if (toStep === 1) {
+            document.getElementById('step2').style.display = 'none';
+            document.getElementById('step1').style.display = 'block';
+            setStepUI(1, false);
+            currentStep = 1;
+        }
+    }
+
+    // ── Submit ───────────────────────────────────────────────────
+    function submitSignup() {
+        // Save to localStorage (acts as client-side "database")
+        var user = {
+            name:       formData.name,
+            email:      formData.email,
+            business:   formData.business || '',
+            password:   formData.password,
+            role:       'dealer',
+            created_at: Date.now()
+        };
+        localStorage.setItem('cmis_user', JSON.stringify(user));
+
+        // Create session
+        localStorage.setItem('cmis_session', JSON.stringify({
+            user_id:    user.email,
+            name:       user.name,
+            role:       'dealer',
+            logged_in:  true,
+            created_at: Date.now()
+        }));
+
+        // Mark as brand-new user so dashboard shows the welcome screen
+        localStorage.setItem('is_new_user', 'true');
+        localStorage.setItem('dealer_name', user.name);
+        localStorage.setItem('shop_name', user.business || '');
+
+        // Show success
+        setStepUI(3, true);
+        document.getElementById('step2').style.display = 'none';
+        document.getElementById('cardLogo').style.display = 'none';
+        document.getElementById('stepsBar').style.display = 'none';
+
+        var successName = user.name.split(' ')[0];
+        document.getElementById('successName').textContent = successName;
+        document.getElementById('successDetails').innerHTML =
+            '<div>📧 Email: <strong>' + esc(user.email) + '</strong></div>' +
+            (user.business ? '<div>🏪 Business: <strong>' + esc(user.business) + '</strong></div>' : '') +
+            '<div>🔑 Role: <strong>Dealer</strong></div>';
+
+        document.getElementById('successScreen').classList.add('show');
+
+        // Countdown then redirect to dashboard (welcome screen will greet them)
+        var n = 3;
+        var timer = setInterval(function() {
+            n--;
+            document.getElementById('countdown').textContent = n;
+            if (n <= 0) { clearInterval(timer); window.location.href = 'dashboard.html?new=1'; }
+        }, 1000);
+    }
+
+    function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    // ── If already logged in, skip to dashboard ───────────────────
+    (function init() {
+        /*
+        try {
+            var sess = JSON.parse(localStorage.getItem('cmis_session') || 'null');
+            if (sess && sess.logged_in) window.location.href = 'dashboard.html';
+        } catch(_) {}
+        */
+    })();
+</script>
+</body>
+</html>

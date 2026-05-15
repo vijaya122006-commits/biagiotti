@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biagiotti Retail Intelligence</title>
+    <link rel="stylesheet" href="assets/retail.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <!-- Top KPI Bar / Navbar -->
+    <nav class="navbar">
+        <a href="dashboard.html" class="brand">
+            <i class="fa-solid fa-leaf"></i> Biagiotti Retail Inventory
+        </a>
+        <div class="nav-kpis">
+            <div class="kpi-item">
+                <span class="kpi-label">Analyzed Items</span>
+                <span class="kpi-value" id="kpiTotal">...</span>
+            </div>
+            <div class="kpi-item">
+                <span class="kpi-label">Stockout Risks</span>
+                <span class="kpi-value text-danger" id="kpiRisk">...</span>
+            </div>
+            <div class="kpi-item">
+                <span class="kpi-label">Growth Alerts</span>
+                <span class="kpi-value text-success" id="kpiGrow">...</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Dashboard Container -->
+    <div class="container">
+        
+        <!-- Priority Alerts Section -->
+        <h2 class="section-title">Critical Actions Required</h2>
+        <div class="alerts-container" id="alertsContainer">
+            <!-- Populated via JS -->
+            <div class="alert-item">
+                <div class="skeleton" style="width:100%;height:40px;"></div>
+            </div>
+        </div>
+
+        <!-- Product Cards Grid -->
+        <h2 class="section-title" style="margin-top: 2rem;">Inventory Overview</h2>
+        <div class="grid" id="productGrid">
+            <!-- Populated via JS -->
+            <div class="product-card">
+                <div class="skeleton" style="width:100%;height:150px;"></div>
+            </div>
+            <div class="product-card">
+                <div class="skeleton" style="width:100%;height:150px;"></div>
+            </div>
+            <div class="product-card">
+                <div class="skeleton" style="width:100%;height:150px;"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Details Modal -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+            <div class="modal-header">
+                <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 0.5rem;">
+                    <div id="modalDecisionBadge" class="decision-badge badge-info">MAINTAIN</div>
+                    <span id="modalRiskBadge" style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">RISK: LOW</span>
+                </div>
+                <h3 class="modal-title" id="modalTitle">Product Name</h3>
+                <p class="modal-reasoning" id="modalExplanation">Analytics reasoning goes here.</p>
+            </div>
+            <div class="modal-body">
+                <div class="chart-container-large">
+                    <canvas id="modalChart"></canvas>
+                </div>
+                
+                <div class="card-metrics" style="margin-top: 0;">
+                    <div class="metric">
+                        <span class="metric-label">Days of Inventory</span>
+                        <span class="metric-value" id="modalDays">--</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Reorder Point</span>
+                        <span class="metric-value" id="modalReorder">--</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Demand Shift</span>
+                        <span class="metric-value" id="modalDemand">--</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Profit Margin</span>
+                        <span class="metric-value" id="modalMargin">--</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dependencies -->
+    <script src="assets/pipeline.js"></script>
+    <script src="assets/api.js"></script>
+    <script src="assets/retail.js"></script>
+
+</body>
+</html>

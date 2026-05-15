@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skin-Type Analysis - Biagiotti</title>
+    <link rel="stylesheet" href="assets/theme.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .spinner { display:inline-block;width:16px;height:16px;border:2px solid #fff;
+                   border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        .skin-tag { transition: border-color .3s, background .3s; }
+        .skin-tag-active   { border-color: var(--safe)         !important; background: var(--safe-bg)    !important; }
+        .skin-tag-inactive { border-color: var(--border-color) !important; background: var(--bg-body)    !important; opacity:.5; }
+        .conf-bar { height:6px; border-radius:3px; background:var(--primary); transition:width .5s; }
+
+        .notice-banner {
+            border-radius: 8px; padding: .8rem 1.1rem;
+            font-size: .88rem; margin-bottom: 1rem; display: none;
+            align-items: flex-start; gap: .6rem;
+        }
+        .notice-banner.warn  { background:#fff8e1; border-left:4px solid #d68910; color:#7d6608; }
+        .notice-banner.info  { background:var(--primary-bg,#fdf2f4); border-left:4px solid var(--primary,#b76e79); color:var(--primary,#b76e79); }
+        .notice-banner.safe  { background:#e8f8ef; border-left:4px solid #1e8449; color:#1e8449; }
+        .notice-banner i { margin-top:.1rem; }
+
+        #productContextBar {
+            background: var(--primary-bg, #fdf2f4);
+            border: 1px solid var(--border-color);
+            border-radius: 8px; padding: .65rem 1rem;
+            font-size: .85rem; margin-bottom: 1rem;
+            display: none; align-items: center; gap: .75rem; flex-wrap: wrap;
+        }
+        #productContextBar .ctx-name { font-weight: 600; color: var(--text-dark); }
+        #productContextBar .ctx-id   { font-size: .78rem; color: var(--text-muted); }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="dashboard.html" class="brand-logo">
+                <i class="fa-solid fa-leaf"></i> Biagiotti
+            </a>
+            <ul class="nav-links">
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="database_connection.html">Live Sync</a></li>
+                <li><a href="upload.html">Upload Data</a></li>
+                <li><a href="safety.html">Ingredient Safety</a></li>
+                <li><a href="similarity.html">Similarity Search</a></li>
+                <li><a href="skin.html">Skin-Type Analysis</a></li>
+                <li><a href="forecast.html">Forecasting</a></li>
+                <li><a href="reports.html">Reports</a></li>
+                <li><a href="login.html" style="color:var(--danger);">
+                    <i class="fa-solid fa-sign-out-alt"></i> Logout
+                </a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="page-wrapper fade-in">
+        <div class="container">
+            <!-- Pipeline Banner -->
+            <div id="pipelineBannerContainer"></div>
+
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Skin-Type NLP Review Analysis</h1>
+                    <p class="page-subtitle">AI-driven skin compatibility insights from customer reviews.</p>
+                </div>
+            </div>
+
+            <!-- Product context bar (shown when product is loaded from pipeline) -->
+            <div id="productContextBar">
+                <i class="fa-solid fa-box" style="color:var(--primary);"></i>
+                <span class="ctx-name" id="ctxName"></span>
+                <span class="ctx-id" id="ctxId"></span>
+                <span style="margin-left:auto;font-size:.78rem;color:var(--text-muted);">
+                    Reviews auto-loaded from database
+                </span>
+            </div>
+
+            <!-- Input Card -->
+            <div class="card fade-in delay-1" style="margin-bottom: 2rem;">
+
+                <!-- No-review banner -->
+                <div id="noReviewBanner" class="notice-banner warn">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <div>
+                        <strong>No customer reviews found for this product.</strong>
+                        Enter a review manually below to run the analysis.
+                    </div>
+                </div>
+
+                <!-- No-product banner (shown when opened directly) -->
+                <div id="noProductBanner" class="notice-banner info">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <div>
+                        <strong>No product selected.</strong>
+                        Select a product from the <a href="dashboard.html">Dashboard</a> using
+                        the "Skin Analysis" button, or type a review below manually.
+                    </div>
+                </div>
+
+                <div class="row" style="align-items: flex-start;">
+                    <div class="col-md-9">
+                        <label class="form-label" id="reviewInputLabel">
+                            Enter a review to analyse
+                        </label>
+                        <textarea id="skinReviewInput" class="form-control" rows="3"
+                            placeholder="e.g. This serum is great for my dry, sensitive skin…"></textarea>
+                        <div style="font-size:.78rem;color:var(--text-muted);margin-top:.35rem;">
+                            Tip: Paste multiple reviews separated by periods for a richer analysis.
+                        </div>
+                    </div>
+                    <div class="col-md-3" style="display:flex;align-items:flex-start;padding-top:1.85rem;">
+                        <button id="skinAnalyzeBtn" class="btn btn-primary btn-block">
+                            <i class="fa-solid fa-magnifying-glass"></i> Analyze Reviews
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results -->
+            <div class="row">
+                <!-- NLP Tags -->
+                <div class="col-md-8">
+                    <div class="card fade-in delay-2" style="height:100%;">
+                        <h3 class="card-title">NLP Generated Skin Compatibility Tags</h3>
+                        <p class="text-muted" id="skinTagSubtitle" style="font-size:.9rem;margin-bottom:1.5rem;">
+                            Run analysis to generate tags.
+                        </p>
+
+                        <div id="skinTagsContainer" style="display:flex;flex-wrap:wrap;gap:1rem;margin-bottom:2rem;">
+                            <!-- Dry -->
+                            <div id="skinTagDry" class="skin-tag"
+                                style="border:1px solid var(--border-color);padding:1rem;border-radius:var(--radius-sm);text-align:center;flex:1;min-width:150px;">
+                                <i id="skinTagDryIcon" class="fa-solid fa-minus"
+                                   style="font-size:1.5rem;margin-bottom:.5rem;color:var(--text-muted);"></i>
+                                <div style="font-weight:500;font-size:.9rem;">Dry Skin</div>
+                                <div id="skinTagDryConf" style="font-size:.8rem;color:var(--text-muted);">—</div>
+                                <div style="margin-top:.4rem;"><div id="skinTagDryBar" class="conf-bar" style="width:0%;"></div></div>
+                            </div>
+                            <!-- Normal -->
+                            <div id="skinTagNormal" class="skin-tag"
+                                style="border:1px solid var(--border-color);padding:1rem;border-radius:var(--radius-sm);text-align:center;flex:1;min-width:150px;">
+                                <i id="skinTagNormalIcon" class="fa-solid fa-minus"
+                                   style="font-size:1.5rem;margin-bottom:.5rem;color:var(--text-muted);"></i>
+                                <div style="font-weight:500;font-size:.9rem;">Normal Skin</div>
+                                <div id="skinTagNormalConf" style="font-size:.8rem;color:var(--text-muted);">—</div>
+                                <div style="margin-top:.4rem;"><div id="skinTagNormalBar" class="conf-bar" style="width:0%;"></div></div>
+                            </div>
+                            <!-- Oily -->
+                            <div id="skinTagOily" class="skin-tag"
+                                style="border:1px solid var(--border-color);padding:1rem;border-radius:var(--radius-sm);text-align:center;flex:1;min-width:150px;">
+                                <i id="skinTagOilyIcon" class="fa-solid fa-minus"
+                                   style="font-size:1.5rem;margin-bottom:.5rem;color:var(--text-muted);"></i>
+                                <div style="font-weight:500;font-size:.9rem;">Oily Skin</div>
+                                <div id="skinTagOilyConf" style="font-size:.8rem;color:var(--text-muted);">—</div>
+                                <div style="margin-top:.4rem;"><div id="skinTagOilyBar" class="conf-bar" style="width:0%;"></div></div>
+                            </div>
+                            <!-- Sensitive -->
+                            <div id="skinTagSensitive" class="skin-tag"
+                                style="border:1px solid var(--border-color);padding:1rem;border-radius:var(--radius-sm);text-align:center;flex:1;min-width:150px;">
+                                <i id="skinTagSensitiveIcon" class="fa-solid fa-minus"
+                                   style="font-size:1.5rem;margin-bottom:.5rem;color:var(--text-muted);"></i>
+                                <div style="font-weight:500;font-size:.9rem;">Sensitive Skin</div>
+                                <div id="skinTagSensitiveConf" style="font-size:.8rem;color:var(--text-muted);">—</div>
+                                <div style="margin-top:.4rem;"><div id="skinTagSensitiveBar" class="conf-bar" style="width:0%;"></div></div>
+                            </div>
+                        </div>
+
+                        <h3 class="card-title" style="font-size:1.1rem;">Top Review Insights</h3>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Review text</th>
+                                        <th>Skin type</th>
+                                        <th>Sentiment</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="skinInsightsBody">
+                                    <tr>
+                                        <td colspan="3" style="text-align:center;color:var(--text-muted);font-style:italic;">
+                                            Run analysis to see insights.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sentiment Chart -->
+                <div class="col-md-4">
+                    <div class="card fade-in delay-3" style="height:100%;">
+                        <h3 class="card-title">Overall Sentiment</h3>
+                        <div class="chart-wrapper" style="height:300px;">
+                            <canvas id="sentimentChart"></canvas>
+                        </div>
+                        <div style="text-align:center;margin-top:1rem;">
+                            <h2 id="sentimentPctLabel" style="color:var(--safe);font-family:var(--font-heading);">—</h2>
+                            <p class="text-muted">Positive Approval Rating</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/pipeline.js"></script>
+    <script src="assets/api.js"></script>
+    <script src="assets/script.js"></script>
+    <script src="assets/app.js"></script>
+    <script>
+    (function () {
+        'use strict';
+
+        var btn      = document.getElementById('skinAnalyzeBtn');
+        var input    = document.getElementById('skinReviewInput');
+        var sentChart = null;
+        var SKIN_TYPES = ['dry', 'normal', 'oily', 'sensitive'];
+
+        // ── Pipeline Banner ───────────────────────────────────────────────
+        Pipeline.renderBanner('pipelineBannerContainer');
+
+        // ── UI Helpers ────────────────────────────────────────────────────
+        function showBanner(id, show) {
+            var el = document.getElementById(id);
+            if (el) el.style.display = show ? 'flex' : 'none';
+        }
+
+        function setProductContextBar(name, id) {
+            document.getElementById('ctxName').textContent = name || '';
+            document.getElementById('ctxId').textContent   = id   ? '(' + id + ')' : '';
+            document.getElementById('productContextBar').style.display = 'flex';
+        }
+
+        // ── Auto-fill from pipeline ───────────────────────────────────────
+        async function autoFill() {
+            var pctx = Pipeline.getProduct();
+
+            if (!pctx || !pctx.product_id) {
+                // Opened directly — show info banner, no auto-run
+                showBanner('noProductBanner', true);
+                return;
+            }
+
+            // Show which product is loaded
+            setProductContextBar(pctx.product_name, pctx.product_id);
+
+            // Try to fetch review_text from backend
+            try {
+                var res  = await fetch(Pipeline.PIPELINE_BASE + '/product/' + encodeURIComponent(pctx.product_id));
+                var json = await res.json();
+                var review = (json.status === 'success' && json.data && json.data.review_text)
+                    ? json.data.review_text.trim() : '';
+
+                if (review) {
+                    input.value = review;
+                    document.getElementById('reviewInputLabel').textContent =
+                        'Review auto-loaded from database (editable):';
+                    Pipeline.toast('Reviews loaded for ' + pctx.product_name, 'success');
+                    // Auto-run the analysis
+                    setTimeout(function () { btn.click(); }, 500);
+                } else {
+                    // Product has no reviews
+                    input.value = '';
+                    showBanner('noReviewBanner', true);
+                    Pipeline.toast('No reviews found for ' + pctx.product_name + '. Enter manually.', 'warning');
+                }
+            } catch (err) {
+                console.warn('[Skin] Could not fetch product reviews:', err);
+                input.value = '';
+                showBanner('noReviewBanner', true);
+            }
+        }
+
+        autoFill();
+
+        // ── Skin Tags ─────────────────────────────────────────────────────
+        function updateSkinTags(skinResult) {
+            SKIN_TYPES.forEach(function (type) {
+                var prob   = skinResult.probabilities[type] || 0;
+                var pct    = Math.round(prob * 100);
+                var isTop  = (type === skinResult.skin_type);
+                var cap    = type.charAt(0).toUpperCase() + type.slice(1);
+                var tagEl  = document.getElementById('skinTag' + cap);
+                var iconEl = document.getElementById('skinTag' + cap + 'Icon');
+                var confEl = document.getElementById('skinTag' + cap + 'Conf');
+                var barEl  = document.getElementById('skinTag' + cap + 'Bar');
+                if (!tagEl) return;
+                tagEl.classList.toggle('skin-tag-active',   isTop);
+                tagEl.classList.toggle('skin-tag-inactive', !isTop);
+                iconEl.className   = isTop ? 'fa-solid fa-check' : 'fa-solid fa-xmark';
+                iconEl.style.color = isTop ? 'var(--safe)' : '';
+                iconEl.style.fontSize    = '1.5rem';
+                iconEl.style.marginBottom = '0.5rem';
+                confEl.textContent = pct + '% match';
+                barEl.style.width      = pct + '%';
+                barEl.style.background = isTop ? 'var(--safe)' : 'var(--border-color)';
+            });
+            var topCap = skinResult.skin_type.charAt(0).toUpperCase() + skinResult.skin_type.slice(1);
+            document.getElementById('skinTagSubtitle').textContent =
+                'Prediction: ' + topCap + ' skin — confidence ' + Math.round(skinResult.confidence * 100) + '%';
+        }
+
+        // ── Sentiment Chart ───────────────────────────────────────────────
+        function updateSentimentChart(pos, neu, neg) {
+            var ctx = document.getElementById('sentimentChart');
+            if (!ctx) return;
+            var existing = Chart.getChart(ctx);
+            if (existing) existing.destroy();
+            sentChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Positive', 'Neutral', 'Negative'],
+                    datasets: [{
+                        data: [pos, neu, neg],
+                        backgroundColor: [
+                            'rgba(39,174,96,.8)',
+                            'rgba(236,240,241,.8)',
+                            'rgba(211,84,0,.8)'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+            document.getElementById('sentimentPctLabel').textContent = pos + '%';
+        }
+
+        // ── Insights Table ────────────────────────────────────────────────
+        function updateInsightsTable(texts, skinTypes, sentiments) {
+            var tbody = document.getElementById('skinInsightsBody');
+            tbody.innerHTML = '';
+            if (!texts.length) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text-muted);font-style:italic;">No insights available.</td></tr>';
+                return;
+            }
+            texts.forEach(function (text, i) {
+                var sent      = sentiments[i];
+                var sentColor = sent === 'positive' ? 'var(--safe)' : sent === 'negative' ? 'var(--danger)' : 'var(--primary)';
+                var sentIcon  = sent === 'positive' ? 'fa-arrow-trend-up' : sent === 'negative' ? 'fa-arrow-trend-down' : 'fa-minus';
+                var tr = document.createElement('tr');
+                tr.innerHTML =
+                    '<td style="font-size:.85rem;">&ldquo;' + text.slice(0, 80) + (text.length > 80 ? '…' : '') + '&rdquo;</td>' +
+                    '<td><span class="badge badge-primary" style="text-transform:capitalize;">' + (skinTypes[i] || '—') + '</span></td>' +
+                    '<td><span style="color:' + sentColor + ';"><i class="fa-solid ' + sentIcon + '"></i> ' +
+                        sent.charAt(0).toUpperCase() + sent.slice(1) + '</span></td>';
+                tbody.appendChild(tr);
+            });
+        }
+
+        // ── Analyse Button ────────────────────────────────────────────────
+        btn.addEventListener('click', async function () {
+            var reviewText = input.value.trim();
+            if (!reviewText) {
+                Pipeline.toast('Please enter a review to analyse.', 'warning');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span>Analyzing…';
+
+            try {
+                // Split review text into sentences for batch analysis
+                // (handles both single reviews and multi-sentence product reviews)
+                var sentences = reviewText
+                    .split(/(?<=[.!?])\s+/)          // split on sentence boundary
+                    .map(function (s) { return s.trim(); })
+                    .filter(function (s) { return s.length > 15; });  // ignore fragments
+
+                // If no good sentences, treat whole text as one review
+                if (!sentences.length) sentences = [reviewText];
+
+                // Cap at 8 sentences to keep API calls reasonable
+                var batchSentences = sentences.slice(0, 8);
+
+                // Primary skin tag uses the FULL review text
+                var primarySkin = await API.predictSkin(reviewText);
+                updateSkinTags(primarySkin);
+
+                // Batch analyse each sentence for chart + table
+                var batchResults = await Promise.all(
+                    batchSentences.map(function (s) {
+                        return Promise.all([API.predictSkin(s), API.analyzeSentiment(s)]);
+                    })
+                );
+
+                var pos = 0, neu = 0, neg = 0;
+                var allTexts = [], allSkins = [], allSents = [];
+
+                batchResults.forEach(function (pair, i) {
+                    var s = pair[1].sentiment || 'neutral';
+                    if (s === 'positive')   pos++;
+                    else if (s === 'negative') neg++;
+                    else neu++;
+                    allTexts.push(batchSentences[i]);
+                    allSkins.push(pair[0].skin_type || '—');
+                    allSents.push(s);
+                });
+
+                var total = batchResults.length || 1;
+                updateSentimentChart(
+                    Math.round(pos / total * 100),
+                    Math.round(neu / total * 100),
+                    Math.round(neg / total * 100)
+                );
+                updateInsightsTable(allTexts, allSkins, allSents);
+
+                // Store result in pipeline
+                Pipeline.setResult('skinResult', {
+                    product_id:   Pipeline.getProduct() ? Pipeline.getProduct().product_id : null,
+                    product_name: Pipeline.getProduct() ? Pipeline.getProduct().product_name : null,
+                    skin_type:    primarySkin.skin_type,
+                    confidence:   primarySkin.confidence,
+                    positive_pct: Math.round(pos / total * 100),
+                    analyzed_at:  new Date().toISOString(),
+                });
+
+            } catch (err) {
+                console.error('[Skin]', err);
+                Pipeline.toast('Analysis failed: ' + err.message, 'danger');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Analyze Reviews';
+            }
+        });
+
+        // ── Initial load ──────────────────────────────────────────────────────
+        (function initSkin() {
+            // In a real app, this data would come from the sentiment API
+            BiagiottiUI.initSkinSentimentChart('sentimentChart', ['Positive', 'Neutral', 'Negative'], [70, 20, 10]);
+        })();
+    })();
+    </script>
+</body>
+
+</html>

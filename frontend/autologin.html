@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head><title>Auto Login — Biagiotti</title></head>
+<body>
+<script>
+  // Inject the valid session token then redirect to dashboard
+  localStorage.setItem('token', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkZWFsZXJfaWQiOjEsImlhdCI6MTc3NzYxOTQ5MiwiZXhwIjoxODA5MTU1NDkyfQ.3qkf7auMkfHU7XILUaq82d6C-m9Tg_JKOecppAg18vo');
+  localStorage.setItem('dealer_name', 'Demo Dealer');
+  localStorage.setItem('shop_name', 'Cosmetic Intelligence Demo');
+  window.location.href = 'dashboard.html';
+</script>
+<p>Logging in... if this doesn't redirect automatically, <a href="dashboard.html">click here</a>.</p>
+</body>
+</html>

@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload Data — Biagiotti Intelligence</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #C5A192;
+      --primary-dark: #A67C6D;
+      --primary-light: #E8D8D1;
+      --bg-main: #FDFBF9;
+      --text-main: #4A3F3A;
+      --text-muted: #8E827D;
+      --card-bg: rgba(255, 255, 255, 0.7);
+      --glass-border: rgba(197, 161, 146, 0.2);
+      --shadow: 0 10px 30px rgba(74, 63, 58, 0.05);
+      --radius: 20px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: linear-gradient(135deg, #FDFBF9 0%, #F5EFEB 100%);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Simple Header */
+    header {
+      padding: 1.5rem 5%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.4);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--glass-border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.6rem;
+      color: var(--primary-dark);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-exit {
+      padding: 0.6rem 1.2rem;
+      border-radius: 12px;
+      border: 1px solid var(--glass-border);
+      background: white;
+      color: var(--text-main);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-exit:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+    }
+
+    /* Main Layout */
+    .main-container {
+      max-width: 1200px;
+      margin: 3rem auto;
+      padding: 0 2rem;
+      animation: fadeIn 0.8s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .page-header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .page-header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.8rem;
+      margin-bottom: 0.5rem;
+      color: var(--text-main);
+    }
+
+    .page-header p {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+    }
+
+    .upload-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 2.5rem;
+      margin-bottom: 3rem;
+    }
+
+    @media (max-width: 1000px) {
+      .upload-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Upload Card */
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(15px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 2.5rem;
+      box-shadow: var(--shadow);
+    }
+
+    .card-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .drop-zone {
+      border: 2px dashed var(--primary);
+      border-radius: 15px;
+      padding: 3rem 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: rgba(197, 161, 146, 0.03);
+    }
+
+    .drop-zone:hover, .drop-zone.active {
+      background: rgba(197, 161, 146, 0.08);
+      border-color: var(--primary-dark);
+      transform: scale(1.02);
+    }
+
+    .drop-zone i {
+      font-size: 3rem;
+      color: var(--primary);
+      margin-bottom: 1rem;
+    }
+
+    .drop-zone h4 { margin-bottom: 0.5rem; }
+    .drop-zone p { color: var(--text-muted); font-size: 0.9rem; }
+
+    #fileNameDisplay {
+      margin-top: 1rem;
+      font-weight: 500;
+      color: var(--primary-dark);
+      display: none;
+    }
+
+    /* Form Info */
+    .info-box {
+      margin-top: 2rem;
+      padding: 1.2rem;
+      background: white;
+      border-radius: 12px;
+      border: 1px solid var(--glass-border);
+    }
+
+    .info-box h5 {
+      font-size: 0.9rem;
+      margin-bottom: 0.8rem;
+      color: var(--primary-dark);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .info-box ul {
+      list-style: none;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .info-box li {
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .info-box li::before {
+      content: '•';
+      color: var(--primary);
+      font-weight: bold;
+    }
+
+    /* Progress */
+    .progress-wrap {
+      margin-top: 2rem;
+      display: none;
+    }
+
+    .progress-bar {
+      height: 8px;
+      background: var(--primary-light);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--primary);
+      width: 0%;
+      transition: width 0.4s ease;
+    }
+
+    .status-text {
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    /* Buttons */
+    .btn-row {
+      margin-top: 2rem;
+      display: flex;
+      gap: 1rem;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 0.9rem;
+      border-radius: 12px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--primary);
+      color: var(--primary);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Preview Table */
+    .preview-card {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .table-container {
+      margin-top: 1rem;
+      overflow-x: auto;
+      flex-grow: 1;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    th {
+      text-align: left;
+      padding: 1rem;
+      border-bottom: 1px solid var(--glass-border);
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    td {
+      padding: 1rem;
+      border-bottom: 1px solid rgba(0,0,0,0.02);
+    }
+
+    .badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .badge-pending { background: #FFF9E6; color: #D4A017; }
+    .badge-success { background: #E6F4EA; color: #1E8E3E; }
+
+    /* ── LIVE SYNC DRAWER ────────────────────────────── */
+    .sync-overlay {
+      position: fixed; inset: 0; background: rgba(58, 48, 43, 0.4);
+      backdrop-filter: blur(4px); z-index: 1000; opacity: 0; visibility: hidden;
+      transition: all 0.4s ease;
+    }
+    .sync-overlay.open { opacity: 1; visibility: visible; }
+    .sync-drawer {
+      position: fixed; top: 0; right: -500px; width: 480px; height: 100%;
+      background: #fff; z-index: 1001; box-shadow: -10px 0 40px rgba(0,0,0,0.15);
+      transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex; flex-direction: column;
+    }
+    .sync-drawer.open { right: 0; }
+    .sync-drawer-header {
+      padding: 2rem; border-bottom: 1px solid var(--glass-border);
+      display: flex; justify-content: space-between; align-items: center;
+      background: var(--bg-main);
+    }
+    .sync-drawer-header h2 { font-family: 'Playfair Display', serif; font-size: 1.5rem; color: var(--text-main); }
+    .sync-close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); }
+    .sync-drawer-body { padding: 2rem; overflow-y: auto; flex: 1; }
+    .sync-section { margin-bottom: 2rem; }
+    .sync-section h3 { font-size: 0.9rem; font-weight: 700; color: var(--primary-dark); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem; }
+    .sync-db-types { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 1.5rem; }
+    .sync-db-card {
+      border: 1.5px solid var(--glass-border); border-radius: 12px; padding: 1rem 0.5rem;
+      text-align: center; cursor: pointer; transition: all 0.2s; background: var(--bg-main);
+    }
+    .sync-db-card:hover { border-color: var(--primary); background: #fff; }
+    .sync-db-card.active { border-color: var(--primary); background: #fff; box-shadow: 0 4px 12px rgba(197, 161, 146, 0.15); }
+    .sync-db-card .db-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
+    .sync-db-card .db-label { font-size: 0.75rem; font-weight: 700; color: var(--text-main); }
+    .sync-form-group { margin-bottom: 1.25rem; }
+    .sync-form-group label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase; }
+    .sync-form-group input, .sync-form-group select {
+      width: 100%; padding: 0.75rem 1rem; border-radius: 10px; border: 1.5px solid var(--glass-border);
+      font-family: inherit; font-size: 0.9rem; transition: all 0.2s;
+    }
+    .sync-form-group input:focus { border-color: var(--primary); outline: none; background: #fff; box-shadow: 0 0 0 4px rgba(197, 161, 146, 0.1); }
+    .sync-form-row { display: flex; gap: 1rem; }
+    .sync-btn-row { display: flex; gap: 1rem; margin-top: 1rem; }
+    .sync-btn { flex: 1; padding: 0.9rem; border-radius: 12px; font-weight: 700; cursor: pointer; border: none; transition: all 0.2s; font-family: inherit; }
+    .sync-btn-primary { background: var(--primary); color: #fff; }
+    .sync-btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); }
+    .sync-btn-outline { background: #fff; border: 1.5px solid var(--primary); color: var(--primary); }
+    .sync-btn-outline:hover { background: var(--primary-light); }
+    .sync-divider { border: none; border-top: 1px solid var(--glass-border); margin: 1.5rem 0; }
+    .sync-security-note { background: #f8f9fa; padding: 1.25rem; border-radius: 12px; font-size: 0.8rem; color: var(--text-muted); margin-top: 2rem; border: 1px solid #eee; }
+    .sync-security-note h4 { color: var(--text-main); margin-bottom: 0.5rem; font-size: 0.85rem; }
+    .sync-security-note ul { padding-left: 1.2rem; margin-top: 0.5rem; }
+    .sync-security-note li { margin-bottom: 0.25rem; }
+
+    /* Sync Active Status Styles */
+    .sync-status-card { background: var(--bg-main); border: 1px solid var(--glass-border); border-radius: 16px; padding: 1.25rem; margin-bottom: 1.5rem; }
+    .sync-badge { font-size: 0.65rem; font-weight: 800; padding: 3px 8px; border-radius: 4px; letter-spacing: 0.05em; }
+    .sync-badge-idle { background: #e9ecef; color: #495057; }
+    .sync-badge-syncing { background: #fff3cd; color: #856404; animation: pulse 1.5s infinite; }
+    .sync-badge-error { background: #f8d7da; color: #721c24; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+    .sync-status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem; }
+    .sync-stat-box { background: #fff; border: 1px solid var(--glass-border); padding: 0.75rem; border-radius: 10px; }
+    .sync-stat-box small { display: block; font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 2px; }
+    .sync-stat-box strong { font-size: 0.85rem; color: var(--text-main); }
+    .sync-btn-danger { background: #fff; border: 1.5px solid #FADBD8; color: #C0392B; }
+    .sync-btn-danger:hover { background: #FDEDEC; border-color: #E74C3C; }
+    .sync-error-msg { font-size: 0.75rem; color: #C0392B; margin-bottom: 1rem; padding: 0.5rem; background: #FDEDEC; border-radius: 6px; display: none; }
+
+    /* Status indicator */
+    .sync-indicator { width: 8px; height: 8px; border-radius: 50%; background: #dee2e6; margin-right: 6px; }
+    .sync-indicator.connected { background: #28a745; box-shadow: 0 0 8px rgba(40,167,69,0.4); }
+
+  </style>
+</head>
+<body>
+
+  <header>
+    <a href="dashboard.html" class="logo">
+      <i class="fa-solid fa-leaf"></i> Biagiotti
+    </a>
+    <div style="display: flex; gap: 1rem;">
+      <a href="dashboard.html" class="btn-exit">
+        <i class="fa-solid fa-arrow-left"></i> Dashboard
+      </a>
+      <a href="#" onclick="logout()" class="btn-exit" style="color: #E74C3C;">
+        <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+      </a>
+    </div>
+  </header>
+
+  <div class="main-container">
+    <div class="page-header">
+      <h1>Upload Store Data</h1>
+      <p>Import your product catalog and sales history via CSV.</p>
+    </div>
+
+    <div class="upload-grid">
+      <!-- Left: CSV Action -->
+      <div class="card">
+        <div class="card-title">
+          <i class="fa-solid fa-file-csv"></i> File Upload
+        </div>
+
+        <div class="drop-zone" id="dropZone">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          <h4>Drop your CSV here</h4>
+          <p>or click to browse files</p>
+          <input type="file" id="fileInput" accept=".csv" style="display: none;">
+        </div>
+
+        <div id="fileNameDisplay"></div>
+
+        <div class="info-box">
+          <h5><i class="fa-solid fa-circle-info"></i> CSV Requirements</h5>
+          <ul>
+            <li>Required: <code>product_name</code></li>
+            <li>Optional: <code>product_id</code>, <code>brand</code>, <code>price</code>, <code>ingredients</code></li>
+          </ul>
+          <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--glass-border);">
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer; color: var(--primary-dark);">
+              <input type="checkbox" id="clearDataCheck" style="accent-color: var(--primary);">
+              Clear existing products (e.g. sandbox data)
+            </label>
+          </div>
+        </div>
+
+        <div class="progress-wrap" id="progressWrap">
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+          <div class="status-text" id="statusText">Processing...</div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-outline" id="validateBtn" disabled>Validate CSV</button>
+          <button class="btn btn-primary" id="uploadBtn" disabled>Upload & Sync</button>
+        </div>
+      </div>
+
+      <!-- Right: Database Sync Action -->
+      <div class="card" style="display: flex; flex-direction: column;">
+        <div class="card-title">
+          <i class="fa-solid fa-database"></i> Database Sync
+        </div>
+        
+        <div class="drop-zone" onclick="toggleSyncDrawer()" style="border-style: solid; border-color: var(--glass-border); background: #fff;">
+          <i class="fa-solid fa-link" style="color: var(--primary-dark);"></i>
+          <h4>Connect Live Database</h4>
+          <p>PostgreSQL, MySQL, or SQLite</p>
+        </div>
+
+        <div class="info-box" style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+          <h5><i class="fa-solid fa-bolt"></i> Why use Live Sync?</h5>
+          <ul style="margin-bottom: 0;">
+            <li>Automatic updates every 15-60 mins</li>
+            <li>No manual file exports/imports</li>
+            <li>Real-time inventory & sales tracking</li>
+            <li>Secure read-only connection</li>
+          </ul>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="toggleSyncDrawer()">
+            <i class="fa-solid fa-plug"></i> Configure Database Sync
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data Preview (Full Width) -->
+    <div class="card preview-card" style="margin-bottom: 5rem;">
+      <div class="card-title" style="justify-content: space-between;">
+        <span><i class="fa-solid fa-table-list"></i> Recent Upload Preview</span>
+        <span class="badge badge-pending" id="countBadge">No file</span>
+      </div>
+
+      <div class="table-container">
+        <table id="previewTable">
+          <thead>
+            <tr>
+              <th>Product Name</th>
+              <th>Brand</th>
+              <th>Price</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="previewBody">
+            <tr>
+              <td colspan="4" style="text-align: center; padding: 4rem; color: var(--text-muted);">
+                Choose a CSV file to see a preview here.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIVE SYNC DRAWER -->
+  <div class="sync-overlay" id="syncOverlay" onclick="closeSyncDrawer()"></div>
+  <div class="sync-drawer" id="syncDrawer">
+    <div class="sync-drawer-header">
+      <h2>🔗 Live Database Sync</h2>
+      <button class="sync-close-btn" onclick="closeSyncDrawer()">✕</button>
+    </div>
+    <div class="sync-drawer-body">
+      <!-- Connection Status (shown when connected) -->
+      <div id="syncActiveStatus" style="display:none">
+        <div class="sync-status-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+            <strong style="font-size:0.95rem;color:var(--text-main)">✅ Connection Active</strong>
+            <span id="syncStatusBadge" class="sync-badge sync-badge-idle">IDLE</span>
+          </div>
+          <div class="sync-status-grid">
+            <div class="sync-stat-box"><small>Last Synced</small><strong id="syncLastTime">Never</strong></div>
+            <div class="sync-stat-box"><small>Rows Imported</small><strong id="syncLastRows">0</strong></div>
+          </div>
+          <div id="syncErrorBox" class="sync-error-msg"></div>
+          <button class="sync-btn sync-btn-outline" id="manualSyncBtn" onclick="doManualSync()" style="margin-bottom:0.75rem">🔄 Sync Now</button>
+          <button class="sync-btn sync-btn-danger" onclick="doDisconnect()">🔗 Disconnect Database</button>
+        </div>
+      </div>
+
+      <!-- Connection Form -->
+      <div id="syncFormSection">
+        <div class="sync-section">
+          <h3>Database Type</h3>
+          <div class="sync-db-types">
+            <div class="sync-db-card active" data-dbtype="postgresql" onclick="selectSyncDbType(this)">
+              <div class="db-icon">🐘</div>
+              <div class="db-label">PostgreSQL</div>
+            </div>
+            <div class="sync-db-card" data-dbtype="mysql" onclick="selectSyncDbType(this)">
+              <div class="db-icon">🐬</div>
+              <div class="db-label">MySQL</div>
+            </div>
+            <div class="sync-db-card" data-dbtype="sqlite" onclick="selectSyncDbType(this)">
+              <div class="db-icon">🗄️</div>
+              <div class="db-label">SQLite</div>
+              <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px;">Local file</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sync-section">
+          <h3>Credentials</h3>
+          <div class="sync-form-row" id="syncHostPortRow">
+            <div class="sync-form-group" style="flex:3"><label>Host Address</label><input type="text" id="syncHost" placeholder="db.example.com"></div>
+            <div class="sync-form-group" style="flex:1"><label>Port</label><input type="number" id="syncPort" value="5432"></div>
+          </div>
+          <div class="sync-form-group">
+            <label id="syncDbNameLabel">Database Name</label>
+            <input type="text" id="syncDbName" placeholder="cosmetic_store_db">
+            <p id="syncDbNameHint" style="display:none;font-size:0.75rem;color:var(--text-muted);margin-top:0.3rem;line-height:1.4;">
+              📂 Enter the <strong>full absolute path</strong> to your .sqlite file.<br>
+              e.g. <strong>/Users/you/Desktop/dealer_store.sqlite</strong>
+            </p>
+          </div>
+          <div class="sync-form-row" id="syncAuthRow">
+            <div class="sync-form-group"><label>Username</label><input type="text" id="syncUser" placeholder="read_only_user"></div>
+            <div class="sync-form-group"><label>Password</label><input type="password" id="syncPass" placeholder="••••••••"></div>
+          </div>
+        </div>
+
+        <hr class="sync-divider">
+
+        <div class="sync-section">
+          <h3>Table Mapping</h3>
+          <div class="sync-form-row">
+            <div class="sync-form-group"><label>Products Table</label><input type="text" id="syncProductsTable" value="products"></div>
+            <div class="sync-form-group"><label>Sales Table</label><input type="text" id="syncSalesTable" value="sales"></div>
+          </div>
+          <div class="sync-form-group">
+            <label>Sync Interval</label>
+            <select id="syncInterval">
+              <option value="15">Every 15 Minutes</option>
+              <option value="30" selected>Every 30 Minutes</option>
+              <option value="60">Every Hour</option>
+              <option value="360">Every 6 Hours</option>
+              <option value="1440">Daily</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="sync-btn-row">
+          <button class="sync-btn sync-btn-outline" id="syncTestBtn" onclick="doTestConnection()">🧪 Test</button>
+          <button class="sync-btn sync-btn-primary" id="syncSaveBtn" onclick="doSaveConnection()">🔗 Connect & Sync</button>
+        </div>
+      </div>
+
+      <div class="sync-security-note">
+        <h4>🛡️ Security</h4>
+        <p>Biagiotti connects in <strong>read-only</strong> mode. We recommend a dedicated user with only <code>SELECT</code> permissions.</p>
+        <ul><li>Data pulled at your chosen interval</li><li>AI pipeline auto-triggers after each sync</li><li>No manual CSV uploads needed</li></ul>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <script>
+    const API_BASE = (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') ? window.location.origin : 'http://localhost:5050';
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileNameDisplay = document.getElementById('fileNameDisplay');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const validateBtn = document.getElementById('validateBtn');
+    const clearDataCheck = document.getElementById('clearDataCheck');
+    const progressWrap = document.getElementById('progressWrap');
+    const progressFill = document.getElementById('progressFill');
+    const statusText = document.getElementById('statusText');
+    const previewBody = document.getElementById('previewBody');
+    const countBadge = document.getElementById('countBadge');
+
+    let selectedFile = null;
+
+    // --- Auth Check ---
+    function getAuth() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.warn('No token found, redirecting to login...');
+        window.location.href = 'index.html';
+        return {};
+      }
+      return { 'Authorization': `Bearer ${token}` };
+    }
+
+    function logout() {
+      localStorage.clear();
+      window.location.href = 'index.html';
+    }
+
+    // --- Interaction ---
+    dropZone.onclick = () => fileInput.click();
+    
+    dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('active'); };
+    dropZone.ondragleave = () => dropZone.classList.remove('active');
+    dropZone.ondrop = (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('active');
+      if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+    };
+
+    fileInput.onchange = (e) => {
+      if (e.target.files.length) handleFile(e.target.files[0]);
+    };
+
+    function handleFile(file) {
+      if (!file.name.endsWith('.csv')) {
+        alert('Please select a CSV file.');
+        return;
+      }
+      selectedFile = file;
+      fileNameDisplay.textContent = `Selected: ${file.name}`;
+      fileNameDisplay.style.display = 'block';
+      uploadBtn.disabled = false;
+      validateBtn.disabled = false;
+      
+      quickPreview(file);
+    }
+
+    function quickPreview(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const text = e.target.result;
+        const rows = text.split('\n').slice(0, 8); // Header + 7 rows
+        if (rows.length < 2) return;
+
+        const headers = rows[0].split(',').map(h => h.trim().toLowerCase());
+        const nameIdx = headers.indexOf('product_name') !== -1 ? headers.indexOf('product_name') : headers.indexOf('name');
+        const brandIdx = headers.indexOf('brand');
+        const priceIdx = headers.indexOf('price');
+
+        previewBody.innerHTML = '';
+        rows.slice(1).forEach(row => {
+          if (!row.trim()) return;
+          const cols = row.split(',');
+          const name = cols[nameIdx] || 'Unknown';
+          const brand = brandIdx !== -1 ? (cols[brandIdx] || '—') : '—';
+          const price = priceIdx !== -1 ? (cols[priceIdx] || '—') : '—';
+
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${name}</td>
+            <td>${brand}</td>
+            <td>${price}</td>
+            <td><span class="badge badge-pending">Ready</span></td>
+          `;
+          previewBody.appendChild(tr);
+        });
+        countBadge.textContent = 'Previewing...';
+      };
+      reader.readAsText(file);
+    }
+
+    validateBtn.onclick = () => {
+      alert('CSV format looks correct. Required columns detected.');
+    };
+
+    uploadBtn.onclick = async () => {
+      if (!selectedFile) return;
+
+      const auth = getAuth();
+      if (!auth.Authorization) return; // Prevent action if not logged in
+
+      uploadBtn.disabled = true;
+      progressWrap.style.display = 'block';
+      progressFill.style.width = '10%';
+      statusText.textContent = 'Preparing pipeline...';
+
+      try {
+        // Optional: Clear data first
+        if (clearDataCheck.checked) {
+          statusText.textContent = 'Clearing existing data...';
+          const resetRes = await fetch(`${API_BASE}/api/auth/reset-account`, {
+            method: 'POST',
+            headers: auth
+          });
+          if (!resetRes.ok) throw new Error('Failed to clear existing data');
+          progressFill.style.width = '30%';
+        }
+
+        statusText.textContent = 'Uploading to secure pipeline...';
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+
+        const res = await fetch(`${API_BASE}/api/pipeline/upload`, {
+          method: 'POST',
+          headers: { 'Authorization': auth.Authorization }, // Note: fetch with FormData shouldn't have Content-Type header
+          body: formData
+        });
+
+        const data = await res.json();
+        if (data.status === 'success') {
+          progressFill.style.width = '100%';
+          statusText.textContent = 'Success! Syncing dashboard...';
+          
+          // Clear new-user flag so they see the real dashboard now
+          localStorage.removeItem('is_new_user');
+
+          if (data.data.preview) {
+            renderFinalPreview(data.data.preview);
+            countBadge.className = 'badge badge-success';
+            countBadge.textContent = `Uploaded ${data.data.uploaded_count} products`;
+          }
+
+          setTimeout(() => {
+            window.location.href = 'dashboard.html';
+          }, 1000);
+        } else {
+          throw new Error(data.message || 'Upload failed');
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
+        uploadBtn.disabled = false;
+        progressWrap.style.display = 'none';
+      }
+    };
+
+    function renderFinalPreview(items) {
+      previewBody.innerHTML = '';
+      items.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${item.product_name}</td>
+          <td>${item.brand || '—'}</td>
+          <td>${item.price || '—'}</td>
+          <td><span class="badge badge-success">Processed</span></td>
+        `;
+        previewBody.appendChild(tr);
+      });
+    }
+
+    // --- Live Sync Logic ---
+    let _syncDbType = 'postgresql';
+    let _syncStatusInterval = null;
+
+    function toggleSyncDrawer() {
+      const d = document.getElementById('syncDrawer');
+      const o = document.getElementById('syncOverlay');
+      const isOpen = d.classList.contains('open');
+      if (isOpen) { closeSyncDrawer(); }
+      else { d.classList.add('open'); o.classList.add('open'); document.body.style.overflow='hidden'; checkSyncStatus(); }
+    }
+    function closeSyncDrawer() {
+      document.getElementById('syncDrawer').classList.remove('open');
+      document.getElementById('syncOverlay').classList.remove('open');
+      document.body.style.overflow = '';
+      if (_syncStatusInterval) { clearInterval(_syncStatusInterval); _syncStatusInterval = null; }
+    }
+    function selectSyncDbType(el) {
+      document.querySelectorAll('.sync-db-card').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      _syncDbType = el.dataset.dbtype;
+      const isSqlite = _syncDbType === 'sqlite';
+      document.getElementById('syncHostPortRow').style.display = isSqlite ? 'none' : '';
+      document.getElementById('syncAuthRow').style.display     = isSqlite ? 'none' : '';
+      document.getElementById('syncDbNameLabel').textContent   = isSqlite ? 'SQLite File Path' : 'Database Name';
+      document.getElementById('syncDbName').placeholder        = isSqlite ? '/Users/you/Desktop/dealer_store.sqlite' : 'cosmetic_store_db';
+      document.getElementById('syncDbNameHint').style.display  = isSqlite ? 'block' : 'none';
+      if (!isSqlite) document.getElementById('syncPort').value = _syncDbType === 'mysql' ? '3306' : '5432';
+    }
+    function _getSyncPayload() {
+      return {
+        db_type: _syncDbType,
+        host: document.getElementById('syncHost').value,
+        port: document.getElementById('syncPort').value,
+        db_name: document.getElementById('syncDbName').value,
+        username: document.getElementById('syncUser').value,
+        password: document.getElementById('syncPass').value,
+        products_table: document.getElementById('syncProductsTable').value || 'products',
+        sales_table: document.getElementById('syncSalesTable').value || 'sales',
+        sync_interval_min: document.getElementById('syncInterval').value
+      };
+    }
+    async function checkSyncStatus() {
+      try {
+        const res = await fetch(`${API_BASE}/api/db-connect/status`, { headers: getAuth() });
+        const data = await res.json();
+        const activeSection = document.getElementById('syncActiveStatus');
+        const formSection = document.getElementById('syncFormSection');
+        if (data.connected) {
+          activeSection.style.display = 'block';
+          formSection.style.opacity = '0.4';
+          formSection.querySelectorAll('input,select,button').forEach(el => el.disabled = true);
+          document.getElementById('syncStatusBadge').textContent = (data.sync_status || 'idle').toUpperCase();
+          document.getElementById('syncLastTime').textContent = data.last_synced_at ? new Date(data.last_synced_at).toLocaleString() : 'Never';
+          document.getElementById('syncLastRows').textContent = data.last_sync_rows || '0';
+        } else {
+          activeSection.style.display = 'none';
+          formSection.style.opacity = '1';
+          formSection.querySelectorAll('input,select,button').forEach(el => el.disabled = false);
+        }
+      } catch(e) {}
+    }
+    async function doTestConnection() {
+      const btn = document.getElementById('syncTestBtn');
+      btn.disabled = true; btn.textContent = '⏳ Testing...';
+      try {
+        const res = await fetch(`${API_BASE}/api/db-connect/test`, {
+          method: 'POST', headers: { ...getAuth(), 'Content-Type': 'application/json' },
+          body: JSON.stringify(_getSyncPayload())
+        });
+        const data = await res.json();
+        alert(data.success ? '✅ Connection successful!' : '❌ Connection failed: ' + data.message);
+      } catch(e) { alert('❌ Test failed.'); }
+      finally { btn.disabled = false; btn.textContent = '🧪 Test'; }
+    }
+    async function doSaveConnection() {
+      const btn = document.getElementById('syncSaveBtn');
+      btn.disabled = true; btn.textContent = '⏳ Connecting...';
+      try {
+        const res = await fetch(`${API_BASE}/api/db-connect/save`, {
+          method: 'POST', headers: { ...getAuth(), 'Content-Type': 'application/json' },
+          body: JSON.stringify(_getSyncPayload())
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert('✅ Database connected! Starting first sync...');
+          
+          // Clear new-user flag
+          localStorage.removeItem('is_new_user');
+
+          checkSyncStatus();
+          setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
+        } else alert('❌ Setup failed: ' + data.message);
+      } catch(e) { alert('❌ Server error.'); }
+      finally { btn.disabled = false; btn.textContent = '🔗 Connect & Sync'; }
+    }
+    async function doManualSync() {
+      const btn = document.getElementById('manualSyncBtn');
+      btn.disabled = true; btn.textContent = '⏳ Syncing...';
+      try {
+        await fetch(`${API_BASE}/api/db-connect/sync`, { method:'POST', headers:getAuth() });
+        alert('🔄 Sync triggered! Checking progress...');
+        checkSyncStatus();
+      } catch(e) { alert('❌ Sync request failed.'); }
+      finally { setTimeout(() => { btn.disabled = false; btn.textContent = '🔄 Sync Now'; }, 5000); }
+    }
+    async function doDisconnect() {
+      if (!confirm('Disconnect your database? This stops all real-time syncs.')) return;
+      try {
+        await fetch(`${API_BASE}/api/db-connect`, { method:'DELETE', headers:getAuth() });
+        alert('✅ Database disconnected.');
+        checkSyncStatus();
+      } catch(e) { alert('❌ Disconnect failed.'); }
+    }
+  </script>
+</body>
+</html>

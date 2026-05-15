@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ingredient Safety - Biagiotti</title>
+    <link rel="stylesheet" href="assets/theme.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        .spinner { display:inline-block;width:16px;height:16px;border:2px solid #fff;
+                   border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        .score-bar-fill { transition: width .6s ease, background .4s; }
+        .ingredient-row-harmful { background: var(--danger-bg) !important; }
+        .ingredient-row-caution  { background: var(--warning-bg) !important; }
+        #findAlternativesBtn { display:none; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(183,110,121,.4)} 50%{box-shadow:0 0 0 8px rgba(183,110,121,0)} }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="dashboard.html" class="brand-logo">
+                <i class="fa-solid fa-leaf"></i> Biagiotti
+            </a>
+            <ul class="nav-links">
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="database_connection.html">Live Sync</a></li>
+                <li><a href="upload.html">Upload Data</a></li>
+                <li><a href="safety.html">Ingredient Safety</a></li>
+                <li><a href="similarity.html">Similarity Search</a></li>
+                <li><a href="skin.html">Skin-Type Analysis</a></li>
+                <li><a href="forecast.html">Forecasting</a></li>
+                <li><a href="reports.html">Reports</a></li>
+                <li><a href="login.html" style="color: var(--danger);"><i class="fa-solid fa-sign-out-alt"></i> Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="page-wrapper fade-in">
+        <div class="container">
+            <!-- Pipeline Banner -->
+            <div id="pipelineBannerContainer"></div>
+
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Ingredient Safety Analysis</h1>
+                    <p class="page-subtitle">Scan cosmetic formulas for potential toxins or banned substances.</p>
+                </div>
+                <button id="downloadSafetyReport" class="btn btn-outline">
+                    <i class="fa-solid fa-file-pdf"></i> Download Safety Report
+                </button>
+            </div>
+
+            <div class="row">
+                <div class="col-md-5">
+                    <!-- Search Card -->
+                    <div class="card fade-in delay-1">
+                        <h3 class="card-title">Analyze Product</h3>
+                        <div class="search-container" style="flex-direction: column;">
+                            <input id="safetyIngredientInput" type="text" class="form-control"
+                                placeholder="Paste ingredient list here, or select a product from Dashboard…">
+                            <input id="safetyProductName" type="text" class="form-control" style="margin-top:.6rem;"
+                                placeholder="Product name (optional)…">
+                            <input id="safetyProductId" type="text" class="form-control" style="margin-top:.6rem;"
+                                placeholder="Product ID (optional)…">
+                            <button id="safetyAnalyzeBtn" class="btn btn-primary btn-block" style="margin-top:.8rem;">
+                                <i class="fa-solid fa-magnifying-glass"></i> Analyze Safety
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Status Panel -->
+                    <div id="safetyStatusCard" class="card fade-in delay-2" style="border-top: 4px solid var(--border-color);">
+                        <h3 class="card-title" style="display: flex; justify-content: space-between;">
+                            Safety Status
+                            <span id="safetyBadge" class="badge" style="font-size:.9rem;">—</span>
+                        </h3>
+
+                        <div style="margin: 1.5rem 0;">
+                            <label class="form-label" style="display: flex; justify-content: space-between;">
+                                Toxicity Level <span id="toxicityLabel">—</span>
+                            </label>
+                            <div style="width:100%; height:8px; background:var(--border-color); border-radius:4px; overflow:hidden;">
+                                <div id="toxicityBar" class="score-bar-fill" style="width:0%; height:100%; background:var(--border-color);"></div>
+                            </div>
+                        </div>
+
+                        <div style="margin:1rem 0;">
+                            <label class="form-label" style="display:flex; justify-content:space-between;">
+                                Safety Score <span id="safetyScoreLabel">—</span>
+                            </label>
+                            <div style="width:100%; height:8px; background:var(--border-color); border-radius:4px; overflow:hidden;">
+                                <div id="safetyScoreBar" class="score-bar-fill" style="width:0%; height:100%; background:var(--safe);"></div>
+                            </div>
+                        </div>
+
+                        <h4 style="font-size:.95rem; margin-bottom:.5rem;">
+                            <i class="fa-solid fa-triangle-exclamation text-danger"></i>
+                            Harmful Ingredients Detected:
+                        </h4>
+                        <ul id="harmfulList" style="list-style:none; color:var(--text-muted); font-size:.9rem; min-height:2rem;">
+                            <li style="color:var(--text-muted); font-style:italic;">Run analysis to see results.</li>
+                        </ul>
+
+                        <p id="safetyRecommendation" class="text-muted" style="font-size:.85rem; margin-top:1rem;"></p>
+
+                        <!-- Smart pipeline button — shown only when product is unsafe -->
+                        <button id="findAlternativesBtn" class="btn btn-primary btn-block" style="margin-top:1.5rem;">
+                            <i class="fa-solid fa-arrows-rotate"></i> Find Safer Alternatives →
+                        </button>
+
+                        <!-- Forecast this product -->
+                        <button id="forecastThisBtn" class="btn btn-outline btn-block" style="margin-top:.75rem; display:none;">
+                            <i class="fa-solid fa-chart-line"></i> Forecast This Product
+                        </button>
+
+                        <!-- View full report -->
+                        <button id="viewReportBtn" class="btn btn-outline btn-block" style="margin-top:.75rem; display:none;">
+                            <i class="fa-solid fa-file-lines"></i> View Full Report
+                        </button>
+                    </div>
+                </div>
+
+                <div class="col-md-7">
+                    <!-- Table Card -->
+                    <div class="card fade-in delay-3">
+                        <h3 class="card-title">Detailed Ingredient Breakdown</h3>
+
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Ingredient</th>
+                                        <th>Status</th>
+                                        <th>Reason</th>
+                                        <th>Severity</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ingredientTableBody">
+                                    <tr>
+                                        <td colspan="5" style="text-align:center; color:var(--text-muted); font-style:italic;">
+                                            Enter an ingredient list and click Analyze Safety.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/pipeline.js"></script>
+    <script src="assets/api.js"></script>
+    <script src="assets/script.js"></script>
+    <script src="assets/app.js"></script>
+    <script>
+    (function () {
+        var btn    = document.getElementById('safetyAnalyzeBtn');
+        var ingIn  = document.getElementById('safetyIngredientInput');
+        var nameIn = document.getElementById('safetyProductName');
+        var pidIn  = document.getElementById('safetyProductId');
+        var altBtn = document.getElementById('findAlternativesBtn');
+        var fcBtn  = document.getElementById('forecastThisBtn');
+        var rpBtn  = document.getElementById('viewReportBtn');
+        var dlBtn  = document.getElementById('downloadSafetyReport');
+
+        var lastResult = null;
+
+        // ── Pipeline Banner + Auto-fill ──────────────────────────────────────
+        Pipeline.renderBanner('pipelineBannerContainer');
+
+        var pctx = Pipeline.getProduct();
+
+        // ── No-ingredients info banner ────────────────────────────────────────
+        var noIngMsg = document.createElement('div');
+        noIngMsg.id = 'noIngBanner';
+        noIngMsg.style.cssText = 'display:none;background:#fff8e1;border-left:4px solid #d68910;' +
+            'border-radius:6px;padding:.75rem 1rem;margin-bottom:1rem;font-size:.88rem;color:#7d6608;';
+        noIngMsg.innerHTML = '<i class="fa-solid fa-circle-exclamation" style="margin-right:.4rem;"></i>' +
+            '<strong>No ingredient data found for this product.</strong> ' +
+            'This product has no ingredients in the database. ' +
+            'Please paste the ingredients manually to analyze.';
+        document.querySelector('.search-container').parentNode
+            .insertBefore(noIngMsg, document.querySelector('.search-container'));
+
+        function showNoIngBanner(show) {
+            noIngMsg.style.display = show ? 'block' : 'none';
+        }
+
+        // ── Auto-fill from pipeline context ───────────────────────────────────
+        async function autoFill() {
+            if (!pctx || !pctx.product_id) return;
+
+            // Always fill name + ID
+            if (pctx.product_name) nameIn.value = pctx.product_name;
+            if (pctx.product_id)   pidIn.value  = pctx.product_id;
+
+            // Case 1: Pipeline already has ingredients → use them
+            if (pctx.ingredients && pctx.ingredients.trim()) {
+                ingIn.value = pctx.ingredients.trim();
+                showNoIngBanner(false);
+                Pipeline.toast('Auto-filled from pipeline: ' + pctx.product_name, 'success');
+                return;
+            }
+
+            // Case 2: No ingredients in pipeline → try fetching from backend
+            Pipeline.toast('Loading product data…', 'info');
+            try {
+                var res  = await fetch(Pipeline.PIPELINE_BASE + '/product/' + encodeURIComponent(pctx.product_id));
+                var json = await res.json();
+                var fetched = (json.status === 'success' && json.data && json.data.ingredients)
+                    ? json.data.ingredients.trim() : '';
+
+                if (fetched) {
+                    ingIn.value = fetched;
+                    // Update pipeline state so future pages also have the ingredients
+                    Pipeline.setProduct(pctx.product_id, pctx.product_name, fetched);
+                    showNoIngBanner(false);
+                    Pipeline.toast('Auto-filled from database: ' + pctx.product_name, 'success');
+                } else {
+                    // Case 3: Product genuinely has no ingredients
+                    ingIn.value = '';
+                    showNoIngBanner(true);
+                    Pipeline.toast('No ingredient data for ' + pctx.product_name + '. Enter manually.', 'warning');
+                }
+            } catch (err) {
+                console.warn('Failed to fetch product details:', err);
+                ingIn.value = '';
+                showNoIngBanner(true);
+            }
+        }
+
+        autoFill();
+
+        // ── Helpers ──────────────────────────────────────────────────────────
+        function setSeverityColor(sev) {
+            if (sev >= 8) return 'var(--danger)';
+            if (sev >= 5) return 'var(--warning)';
+            return '#f59e0b';
+        }
+
+        function renderResults(data) {
+            var card  = document.getElementById('safetyStatusCard');
+            var badge = document.getElementById('safetyBadge');
+            var borderColor = data.status === 'Safe' ? 'var(--safe)'
+                            : data.status === 'Moderate' ? 'var(--warning)' : 'var(--danger)';
+            var badgeClass  = data.status === 'Safe' ? 'badge-safe'
+                            : data.status === 'Moderate' ? 'badge-warning' : 'badge-danger';
+            card.style.borderTopColor = borderColor;
+            badge.className = 'badge ' + badgeClass;
+            badge.textContent = data.status;
+
+            var toxPct = Math.round(data.toxicity_level * 10);
+            document.getElementById('toxicityBar').style.width      = toxPct + '%';
+            document.getElementById('toxicityBar').style.background = borderColor;
+            document.getElementById('toxicityLabel').textContent    = data.toxicity_level.toFixed(1) + '/10';
+
+            document.getElementById('safetyScoreBar').style.width = data.safety_score + '%';
+            document.getElementById('safetyScoreBar').style.background =
+                data.safety_score >= 80 ? 'var(--safe)'
+              : data.safety_score >= 50 ? 'var(--warning)' : 'var(--danger)';
+            document.getElementById('safetyScoreLabel').textContent = data.safety_score.toFixed(0) + '/100';
+
+            var ul = document.getElementById('harmfulList');
+            ul.innerHTML = '';
+            if (data.harmful_ingredients.length === 0) {
+                ul.innerHTML = '<li style="color:var(--safe);"><i class="fa-solid fa-circle-check"></i> No harmful ingredients detected</li>';
+            } else {
+                data.harmful_ingredients.forEach(function (ing) {
+                    var li = document.createElement('li');
+                    li.style.cssText = 'padding:.5rem 0; border-bottom:1px solid var(--border-color);';
+                    li.innerHTML =
+                        '<strong style="color:var(--text-dark);">' + ing.name + '</strong>' +
+                        ' — ' + ing.reason +
+                        ' <span style="float:right; font-size:.75rem; color:' + setSeverityColor(ing.severity) + ';">Sev ' + ing.severity + '/10</span>';
+                    ul.appendChild(li);
+                });
+            }
+
+            document.getElementById('safetyRecommendation').textContent = data.recommendation;
+
+            // Ingredient table — match each typed ingredient against the API response
+            var rawList = ingIn.value.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+            var tbody = document.getElementById('ingredientTableBody');
+            tbody.innerHTML = '';
+            rawList.forEach(function (ing) {
+                var ingLower = ing.toLowerCase().trim();
+                // Match against the raw 'keyword' field (e.g. 'alcohol', 'sulphates')
+                // AND the display name's first word for legacy compatibility
+                var matchedHarm = data.harmful_ingredients.find(function(h){
+                    var kwMatch  = h.keyword && ingLower.includes(h.keyword.toLowerCase());
+                    var nameFirst = h.name.toLowerCase().replace(/\s*\(.*\)/, '').split(' ')[0];
+                    var nameMatch = ingLower.includes(nameFirst) && nameFirst.length > 2;
+                    return kwMatch || nameMatch;
+                });
+                var status, badgeCls, action, rowCls = '';
+                if (matchedHarm) {
+                    status = 'Harmful'; badgeCls = 'badge-danger'; action = 'Remove / Replace'; rowCls = 'ingredient-row-harmful';
+                } else {
+                    status = 'Safe'; badgeCls = 'badge-safe'; action = 'None';
+                }
+                var tr = document.createElement('tr');
+                if (rowCls) tr.className = rowCls;
+                tr.innerHTML =
+                    '<td>' + ing + '</td>' +
+                    '<td><span class="badge ' + badgeCls + '">' + status + '</span></td>' +
+                    '<td>' + (matchedHarm ? matchedHarm.reason : 'No known risk') + '</td>' +
+                    '<td>' + (matchedHarm ? matchedHarm.severity + '/10' : '—') + '</td>' +
+                    '<td>' + action + '</td>';
+                tbody.appendChild(tr);
+            });
+
+            // ── Smart pipeline buttons ────────────────────────────────────────
+            fcBtn.style.display = 'block';
+            rpBtn.style.display = 'block';
+
+            if (data.status !== 'Safe') {
+                altBtn.style.display = 'block';
+            } else {
+                altBtn.style.display = 'none';
+            }
+        }
+
+        // ── Analyze Button ────────────────────────────────────────────────────
+        btn.addEventListener('click', async function () {
+            var ingText  = ingIn.value.trim();
+            var prodName = nameIn.value.trim();
+            var prodId   = pidIn.value.trim() || null;
+            if (!ingText) { alert('Please enter an ingredient list.'); return; }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span>Analyzing…';
+
+            try {
+                var data = await API.detectHarmful(prodId, ingText, prodName);
+                lastResult = data;
+
+                // Update pipeline state with latest context
+                var currentPid  = prodId || (pctx && pctx.product_id) || null;
+                var currentName = prodName || (pctx && pctx.product_name) || '';
+                if (currentPid || currentName) {
+                    Pipeline.setProduct(currentPid || '', currentName, ingText);
+                }
+
+                // Store result for reports page
+                Pipeline.setResult('safetyResult', {
+                    product_id:   currentPid,
+                    product_name: currentName,
+                    safety_score: data.safety_score,
+                    status:       data.status,
+                    toxicity_level: data.toxicity_level,
+                    harmful_count:  data.harmful_count,
+                    harmful_ingredients: data.harmful_ingredients,
+                    recommendation: data.recommendation,
+                    analyzed_at:  new Date().toISOString(),
+                });
+
+                renderResults(data);
+
+            } catch (err) {
+                alert('Analysis failed: ' + err.message);
+                console.error(err);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Analyze Safety';
+            }
+        });
+
+        // ── Pipeline: Find Alternatives ───────────────────────────────────────
+        altBtn.addEventListener('click', function () {
+            var query = nameIn.value.trim() || pidIn.value.trim() || ingIn.value.trim().slice(0, 50);
+            Pipeline.setSearchQuery(query);
+            // Preserve product context
+            var pid = pidIn.value.trim() || (pctx && pctx.product_id) || '';
+            Pipeline.setProduct(pid, nameIn.value.trim(), ingIn.value.trim());
+            Pipeline.toast('Finding safer alternatives…', 'success');
+            setTimeout(function () { Pipeline.goTo('similarity.html'); }, 500);
+        });
+
+        // ── Pipeline: Forecast ────────────────────────────────────────────────
+        fcBtn.addEventListener('click', function () {
+            var pid  = pidIn.value.trim() || (pctx && pctx.product_id) || '';
+            var name = nameIn.value.trim() || (pctx && pctx.product_name) || '';
+            Pipeline.setProduct(pid, name, ingIn.value.trim());
+            Pipeline.toast('Opening forecasting…', 'success');
+            setTimeout(function () { Pipeline.goTo('forecast.html'); }, 500);
+        });
+
+        // ── Pipeline: Reports ─────────────────────────────────────────────────
+        rpBtn.addEventListener('click', function () {
+            Pipeline.goTo('reports.html');
+        });
+
+        // ── Download Safety Report ────────────────────────────────────────────
+        dlBtn.addEventListener('click', function () {
+            if (!lastResult) { Pipeline.toast('Run analysis first.', 'warning'); return; }
+            var blob = new Blob([JSON.stringify(lastResult, null, 2)], { type: 'application/json' });
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'safety_report_' + (nameIn.value.trim() || 'product') + '.json';
+            a.click();
+        });
+
+        // ── Input change listeners to clear results ──
+        [ingIn, nameIn, pidIn].forEach(el => {
+            el.addEventListener('input', () => {
+                if (lastResult) {
+                    lastResult = null;
+                    document.getElementById('safetyBadge').className = 'badge';
+                    document.getElementById('safetyBadge').textContent = '—';
+                    document.getElementById('toxicityBar').style.width = '0%';
+                    document.getElementById('toxicityLabel').textContent = '—';
+                    document.getElementById('safetyScoreBar').style.width = '0%';
+                    document.getElementById('safetyScoreLabel').textContent = '—';
+                    document.getElementById('harmfulList').innerHTML = '<li style="color:var(--text-muted); font-style:italic;">Run analysis to see results.</li>';
+                    document.getElementById('safetyRecommendation').textContent = '';
+                    document.getElementById('ingredientTableBody').innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted); font-style:italic;">Enter an ingredient list and click Analyze Safety.</td></tr>';
+                    altBtn.style.display = 'none';
+                    fcBtn.style.display = 'none';
+                    rpBtn.style.display = 'none';
+                }
+            });
+        });
+
+        // ── Auto-run removed as per requirements ──
+    })();
+    </script>
+</body>
+</html>

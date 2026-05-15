@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="refresh" content="0; url=index.html">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — Cosmetic Market Intelligence System</title>
+    <meta name="description" content="Sign in to your Biagiotti dealer portal to access AI-powered cosmetic analytics.">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --primary:       #B76E79;
+            --primary-hover: #A15D67;
+            --primary-light: #FCE4EC;
+            --bg-body:       #FFFAFB;
+            --text-dark:     #2C2A2A;
+            --text-muted:    #7E7C7C;
+            --border:        #F0E1E4;
+            --safe:          #27AE60;
+            --danger:        #D35400;
+            --font-head:     'Playfair Display', serif;
+            --font-body:     'Poppins', sans-serif;
+            --radius-sm:     10px;
+            --radius-md:     18px;
+            --radius-lg:     28px;
+            --shadow-lg:     0 20px 60px rgba(183,110,121,0.18);
+        }
+
+        html, body { height: 100%; }
+
+        body {
+            font-family: var(--font-body);
+            color: var(--text-dark);
+            background: linear-gradient(135deg, #fdf6ff 0%, #fff1f2 40%, #fef9f0 70%, #f0fff4 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* ── Aurora blobs ───────────────────────── */
+        .blob { position: fixed; border-radius: 50%; filter: blur(80px); opacity: 0.3; pointer-events: none; }
+        .b1 { width: 450px; height: 450px; background: #f9c8d4; top: -100px; right: -100px; animation: d 14s ease-in-out infinite alternate; }
+        .b2 { width: 350px; height: 350px; background: #c8e6f9; bottom: -80px; left: -80px;  animation: d 18s ease-in-out infinite alternate-reverse; }
+        @keyframes d { from { transform: translate(0,0); } to { transform: translate(20px,16px) scale(1.05); } }
+
+        /* ── Back link ─────────────────────────── */
+        .back-link {
+            position: absolute; top: 1.5rem; left: 1.75rem;
+            display: flex; align-items: center; gap: .5rem;
+            font-size: .85rem; color: var(--text-muted); text-decoration: none;
+            transition: color .2s;
+        }
+        .back-link:hover { color: var(--primary); }
+
+        /* ── Card ──────────────────────────────── */
+        .card {
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(24px);
+            border-radius: var(--radius-lg);
+            padding: 2.75rem 2.5rem;
+            width: 100%; max-width: 420px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid rgba(255,255,255,0.8);
+            animation: slideUp .6s cubic-bezier(.25,.8,.25,1) forwards;
+            opacity: 0; transform: translateY(20px);
+        }
+        @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
+
+        /* ── Logo ──────────────────────────────── */
+        .logo-wrap { text-align: center; margin-bottom: 2rem; }
+        .logo-mark {
+            width: 58px; height: 58px; border-radius: 16px;
+            background: var(--primary);
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 1.6rem; color: white; margin-bottom: .7rem;
+            box-shadow: 0 6px 20px rgba(183,110,121,.35);
+        }
+        .logo-wrap h1 { font-family: var(--font-head); font-size: 1.5rem; color: var(--text-dark); margin: 0 0 .2rem; }
+        .logo-wrap p  { font-size: .83rem; color: var(--text-muted); }
+
+        /* ── Tab switcher ──────────────────────── */
+        .tab-bar {
+            display: flex;
+            background: #f7f2f3; border-radius: 10px; padding: 4px;
+            margin-bottom: 1.75rem;
+        }
+        .tab-btn {
+            flex: 1; padding: .55rem; border-radius: 8px;
+            background: none; border: none; cursor: pointer;
+            font-family: var(--font-body); font-size: .88rem;
+            font-weight: 500; color: var(--text-muted);
+            transition: all .25s;
+        }
+        .tab-btn.active {
+            background: white; color: var(--primary);
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(183,110,121,.15);
+        }
+
+        /* ── Form inputs ────────────────────────── */
+        .form-group { margin-bottom: 1.1rem; }
+        .form-label { display: block; font-size: .85rem; font-weight: 500; margin-bottom: .4rem; color: var(--text-dark); }
+        .input-wrap { position: relative; }
+        .input-wrap .input-icon {
+            position: absolute; left: 1rem; top: 50%; transform: translateY(-50%);
+            color: var(--text-muted); font-size: .9rem; pointer-events: none;
+        }
+        .form-input {
+            width: 100%;
+            padding: .78rem 3rem .78rem 2.6rem;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: var(--font-body); font-size: .9rem;
+            background: var(--bg-body); color: var(--text-dark);
+            transition: all .2s; outline: none;
+        }
+        .form-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+            background: white;
+        }
+        .form-input.error { border-color: #ef4444; box-shadow: 0 0 0 3px #fee2e2; }
+        .eye-btn {
+            position: absolute; right: .75rem; top: 50%; transform: translateY(-50%);
+            background: none; border: none; cursor: pointer; color: var(--text-muted);
+            font-size: .88rem; padding: .2rem; line-height: 1;
+        }
+        .eye-btn:hover { color: var(--primary); }
+
+        /* ── Helper row ─────────────────────────── */
+        .helper-row {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 1.4rem; font-size: .82rem;
+        }
+        .remember-label { display: flex; align-items: center; gap: .4rem; color: var(--text-muted); cursor: pointer; }
+        .remember-label input { accent-color: var(--primary); }
+        .forgot-link { color: var(--primary); text-decoration: none; font-size: .82rem; }
+        .forgot-link:hover { text-decoration: underline; }
+
+        /* ── Error / success feedback ───────────── */
+        .msg-box {
+            display: none; border-radius: 8px;
+            padding: .65rem 1rem; margin-bottom: 1rem; font-size: .83rem;
+            display: none; align-items: center; gap: .5rem;
+        }
+        .msg-box.error   { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; }
+        .msg-box.success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+        .msg-box.show    { display: flex; }
+
+        /* ── Submit button ──────────────────────── */
+        .submit-btn {
+            width: 100%; padding: .9rem; border: none; border-radius: var(--radius-sm);
+            background: var(--primary); color: white;
+            font-family: var(--font-body); font-weight: 600; font-size: .95rem;
+            cursor: pointer; transition: all .25s;
+            box-shadow: 0 4px 14px rgba(183,110,121,.3);
+            display: flex; align-items: center; justify-content: center; gap: .5rem;
+        }
+        .submit-btn:hover:not(:disabled) { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(183,110,121,.4); }
+        .submit-btn:disabled { opacity: .7; cursor: not-allowed; }
+        .submit-btn.success { background: var(--safe); }
+
+        /* ── Divider / switch link ──────────────── */
+        .divider { position: relative; text-align: center; margin: 1.25rem 0; font-size: .8rem; color: var(--text-muted); }
+        .divider::before { content: ''; position: absolute; left: 0; top: 50%; width: 100%; height: 1px; background: var(--border); }
+        .divider span { background: rgba(255,255,255,.9); padding: 0 .75rem; position: relative; }
+        .switch-link {
+            display: flex; align-items: center; justify-content: center; gap: .5rem;
+            width: 100%; padding: .75rem; border-radius: var(--radius-sm);
+            background: var(--primary-light); color: var(--primary);
+            font-weight: 600; font-size: .9rem; text-decoration: none;
+            border: 1.5px solid var(--primary-light); transition: all .2s;
+        }
+        .switch-link:hover { border-color: var(--primary); }
+
+        /* ── Forgot password panel ──────────────── */
+        .forgot-panel { display: none; }
+        .forgot-panel.show { display: block; }
+        .main-panel { display: block; }
+        .main-panel.hide { display: none; }
+
+        .back-to-login {
+            display: inline-flex; align-items: center; gap: .4rem;
+            font-size: .82rem; color: var(--text-muted); cursor: pointer;
+            background: none; border: none; font-family: var(--font-body);
+            margin-bottom: 1rem; padding: 0;
+        }
+        .back-to-login:hover { color: var(--primary); }
+
+        /* ── Responsive ─────────────────────────── */
+        @media (max-width: 480px) { .card { padding: 2rem 1.5rem; } }
+    </style>
+</head>
+<body>
+
+<div class="blob b1"></div>
+<div class="blob b2"></div>
+
+<a href="index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Home</a>
+
+<div class="card">
+
+    <!-- Logo -->
+    <div class="logo-wrap">
+        <div class="logo-mark"><i class="fa-solid fa-leaf"></i></div>
+        <h1>Dealer Portal</h1>
+        <p>Cosmetic Market Intelligence System</p>
+    </div>
+
+    <!-- ── MAIN PANEL ───────────────────────────────────────────── -->
+    <div class="main-panel" id="mainPanel">
+
+        <!-- Tab switcher -->
+        <div class="tab-bar">
+            <button class="tab-btn active" id="loginTab" onclick="switchTab('login')">Sign In</button>
+            <button class="tab-btn"        id="signupTabBtn" onclick="window.location.href='signup.html'">Create Account</button>
+        </div>
+
+        <!-- Error / Success message -->
+        <div class="msg-box error" id="loginMsg">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span id="loginMsgText"></span>
+        </div>
+
+        <!-- Login Form -->
+        <form id="loginForm" onsubmit="handleLogin(event)" novalidate>
+
+            <!-- Email -->
+            <div class="form-group">
+                <label class="form-label" for="email">Email Address</label>
+                <div class="input-wrap">
+                    <i class="input-icon fa-regular fa-envelope"></i>
+                    <input id="email" class="form-input" type="email" placeholder="dealer@example.com" autocomplete="email" required>
+                </div>
+            </div>
+
+            <!-- Password -->
+            <div class="form-group">
+                <label class="form-label" for="password">Password</label>
+                <div class="input-wrap">
+                    <i class="input-icon fa-solid fa-lock"></i>
+                    <input id="password" class="form-input" type="password" placeholder="••••••••" autocomplete="current-password" required>
+                    <button type="button" class="eye-btn" onclick="togglePwd('password', this)" tabindex="-1">
+                        <i class="fa-regular fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Remember + Forgot -->
+            <div class="helper-row">
+                <label class="remember-label">
+                    <input type="checkbox" id="rememberMe"> Remember me
+                </label>
+                <a href="#" class="forgot-link" onclick="showForgot(event)">Forgot password?</a>
+            </div>
+
+            <!-- Submit -->
+            <button type="submit" class="submit-btn" id="loginBtn">
+                <i class="fa-solid fa-sign-in-alt"></i> Sign In
+            </button>
+        </form>
+
+        <div class="divider"><span>New to the platform?</span></div>
+        <a href="signup.html" class="switch-link">
+            <i class="fa-solid fa-user-plus"></i> Create a free account
+        </a>
+    </div>
+
+    <!-- ── FORGOT PASSWORD PANEL ────────────────────────────────── -->
+    <div class="forgot-panel" id="forgotPanel">
+        <button class="back-to-login" onclick="hideForgot()">
+            <i class="fa-solid fa-arrow-left"></i> Back to Sign In
+        </button>
+        <h2 style="font-family:var(--font-head);font-size:1.3rem;margin-bottom:.4rem;">Reset Password</h2>
+        <p style="font-size:.84rem;color:var(--text-muted);margin-bottom:1.5rem;">Enter your email and we'll send a reset link to your inbox.</p>
+
+        <div class="msg-box success" id="forgotSuccess">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>Reset link sent! Check your inbox.</span>
+        </div>
+        <div class="msg-box error" id="forgotError">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span id="forgotErrorText">Email not found.</span>
+        </div>
+
+        <form id="forgotForm" onsubmit="handleForgot(event)" novalidate>
+            <div class="form-group">
+                <label class="form-label" for="forgotEmail">Email Address</label>
+                <div class="input-wrap">
+                    <i class="input-icon fa-regular fa-envelope"></i>
+                    <input id="forgotEmail" class="form-input" type="email" placeholder="dealer@example.com" required>
+                </div>
+            </div>
+            <button type="submit" class="submit-btn" id="forgotBtn">
+                <i class="fa-solid fa-paper-plane"></i> Send Reset Link
+            </button>
+        </form>
+    </div>
+
+</div>
+
+<script>
+    // ── Utilities ─────────────────────────────────────────────────
+    function togglePwd(id, btn) {
+        var inp  = document.getElementById(id);
+        var icon = btn.querySelector('i');
+        inp.type  = inp.type === 'password' ? 'text' : 'password';
+        icon.className = inp.type === 'text' ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
+    }
+
+    function showMsg(id, type, text) {
+        var el = document.getElementById(id);
+        var span = el.querySelector('span') || el;
+        if (span !== el) span.textContent = text;
+        el.className = 'msg-box ' + type + ' show';
+    }
+    function hideMsg(id) {
+        var el = document.getElementById(id);
+        el.className = 'msg-box ' + (el.className.includes('error') ? 'error' : 'success');
+    }
+
+    // ── Tab switcher ──────────────────────────────────────────────
+    function switchTab(tab) { /* login tab only — signup goes to signup.html */ }
+
+    // ── Forgot / back ─────────────────────────────────────────────
+    function showForgot(e) {
+        e.preventDefault();
+        document.getElementById('mainPanel').classList.add('hide');
+        document.getElementById('forgotPanel').classList.add('show');
+    }
+    function hideForgot() {
+        document.getElementById('mainPanel').classList.remove('hide');
+        document.getElementById('forgotPanel').classList.remove('show');
+        ['forgotSuccess','forgotError'].forEach(function(id) {
+            document.getElementById(id).className = 'msg-box ' + (id.includes('Error') ? 'error' : 'success');
+        });
+    }
+
+    // ── Handle Login ──────────────────────────────────────────────
+    var API_BASE = (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') ? window.location.origin : 'http://localhost:5050';
+
+    function handleLogin(e) {
+        e.preventDefault();
+        hideMsg('loginMsg');
+
+        var email = document.getElementById('email').value.trim();
+        var pwd   = document.getElementById('password').value;
+        var btn   = document.getElementById('loginBtn');
+
+        // Basic validation
+        var emailEl = document.getElementById('email');
+        var pwdEl   = document.getElementById('password');
+        emailEl.classList.remove('error'); pwdEl.classList.remove('error');
+
+        var valid = true;
+        if (!email || !/\S+@\S+\.\S+/.test(email)) { emailEl.classList.add('error'); valid = false; }
+        if (!pwd || pwd.length < 6) { pwdEl.classList.add('error'); valid = false; }
+        if (!valid) { showMsg('loginMsg', 'error', 'Please enter a valid email and a password (6+ chars).'); return; }
+
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Signing in…';
+        btn.disabled = true;
+
+        // ── Try the real Flask API first ──────────────────────────
+        fetch(API_BASE + '/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email, password: pwd })
+        })
+        .then(function(res) { return res.json().then(function(data) { return { status: res.status, data: data }; }); })
+        .then(function(r) {
+            if (r.status === 200 && r.data.token) {
+                // Store using the keys dashboard.html expects
+                localStorage.setItem('token',       r.data.token);
+                localStorage.setItem('dealer_id',   r.data.dealer_id);
+                localStorage.setItem('dealer_name', r.data.name || '');
+                localStorage.setItem('shop_name',   r.data.shop_name || '');
+                // Also store legacy cmis_session for backward compat
+                localStorage.setItem('cmis_token', r.data.token);
+                localStorage.setItem('cmis_session', JSON.stringify({
+                    user_id:    r.data.dealer_id,
+                    name:       r.data.name,
+                    shop_name:  r.data.shop_name,
+                    email:      r.data.email,
+                    is_sandbox: r.data.is_sandbox,
+                    role:       'dealer',
+                    logged_in:  true,
+                    created_at: Date.now()
+                }));
+                if (document.getElementById('rememberMe').checked) {
+                    localStorage.setItem('cmis_remember', email);
+                }
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Welcome back, ' + r.data.name + '!';
+                btn.classList.add('success');
+                setTimeout(function() { window.location.href = 'dashboard.html'; }, 800);
+            } else if (r.status === 404 || (r.data.error && r.data.error.toLowerCase().includes('not found'))) {
+                showMsg('loginMsg', 'error', 'No account found. Please create an account first.');
+                btn.innerHTML = '<i class="fa-solid fa-sign-in-alt"></i> Sign In';
+                btn.disabled = false;
+            } else {
+                showMsg('loginMsg', 'error', r.data.error || 'Incorrect email or password.');
+                document.getElementById('password').classList.add('error');
+                btn.innerHTML = '<i class="fa-solid fa-sign-in-alt"></i> Sign In';
+                btn.disabled = false;
+            }
+        })
+        .catch(function(err) {
+            // ── Fallback: check localStorage for legacy accounts ──
+            var stored = null;
+            try { stored = JSON.parse(localStorage.getItem('cmis_user') || 'null'); } catch(_) {}
+            if (stored && stored.email === email && stored.password === pwd) {
+                localStorage.setItem('cmis_session', JSON.stringify({
+                    user_id:    stored.email,
+                    name:       stored.name,
+                    role:       'dealer',
+                    logged_in:  true,
+                    created_at: Date.now()
+                }));
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Redirecting…';
+                btn.classList.add('success');
+                setTimeout(function() { window.location.href = 'dashboard.html'; }, 700);
+            } else {
+                showMsg('loginMsg', 'error', 'Cannot reach server. Please try again.');
+                btn.innerHTML = '<i class="fa-solid fa-sign-in-alt"></i> Sign In';
+                btn.disabled = false;
+            }
+        });
+    }
+
+    // ── Handle Forgot Password ────────────────────────────────────
+    function handleForgot(e) {
+        e.preventDefault();
+        var email = document.getElementById('forgotEmail').value.trim();
+        var btn   = document.getElementById('forgotBtn');
+        var successBox = document.getElementById('forgotSuccess');
+        var errorBox   = document.getElementById('forgotError');
+        var errorText  = document.getElementById('forgotErrorText');
+
+        successBox.className = 'msg-box success';
+        errorBox.className   = 'msg-box error';
+
+        if (!email || !/\S+@\S+\.\S+/.test(email)) {
+            errorBox.className = 'msg-box error show';
+            errorText.textContent = 'Please enter a valid email address.';
+            return;
+        }
+
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending…';
+        btn.disabled = true;
+
+        fetch(API_BASE + '/api/auth/forgot-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email })
+        })
+        .then(function(res) { return res.json().then(function(data) { return { status: res.status, data: data }; }); })
+        .then(function(r) {
+            if (r.status === 200) {
+                var msg = r.data.message;
+                if (r.data.reset_token) {
+                    var link = window.location.origin + window.location.pathname.replace('login.html', 'reset-password.html') + '?token=' + r.data.reset_token;
+                    msg += '<br><br><strong>Reset Link:</strong> <a href="' + link + '" style="color:#B76E79;text-decoration:underline;font-weight:bold;">' + link + '</a>';
+                }
+                successBox.innerHTML = '<i class="fa-solid fa-circle-check"></i> <div>' + msg + '</div>';
+                successBox.className = 'msg-box success show';
+            } else {
+                errorBox.className = 'msg-box error show';
+                errorText.textContent = r.data.error || 'Failed to send reset link.';
+            }
+        })
+        .catch(function(err) {
+            errorBox.className = 'msg-box error show';
+            errorText.textContent = 'Cannot reach server. Please try again.';
+        })
+        .finally(function() {
+            btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Send Reset Link';
+            btn.disabled = false;
+        });
+    }
+
+    // ── Pre-fill remembered email ─────────────────────────────────
+    (function init() {
+        var rem = localStorage.getItem('cmis_remember');
+        if (rem) {
+            document.getElementById('email').value = rem;
+            document.getElementById('rememberMe').checked = true;
+        }
+        /*
+        // Check if already logged in via the dashboard token key
+        if (localStorage.getItem('token')) {
+            window.location.href = 'dashboard.html';
+            return;
+        }
+        // Also check legacy cmis_session
+        try {
+            var sess = JSON.parse(localStorage.getItem('cmis_session') || 'null');
+            if (sess && sess.logged_in && sess.role === 'dealer') {
+                window.location.href = 'dashboard.html';
+                return;
+            }
+        } catch(_) {}
+        */
+
+        // Handle anchor for forgot
+        if (window.location.hash === '#forgot') showForgot({ preventDefault: function(){} });
+    })();
+</script>
+</body>
+</html>

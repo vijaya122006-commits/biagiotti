@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports - Biagiotti</title>
+    <link rel="stylesheet" href="assets/theme.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        .report-section { border-left: 4px solid var(--primary); padding-left: 1rem; margin-bottom: 2rem; }
+        .report-section h3 { color: var(--primary); font-size: 1rem; margin-bottom: .75rem; }
+        .kv-row { display:flex; justify-content:space-between; padding:.4rem 0; border-bottom:1px solid var(--border-color); font-size:.9rem; }
+        .kv-row:last-child { border-bottom:none; }
+        .kv-key { color:var(--text-muted); }
+        .kv-val { font-weight:600; color:var(--text-dark); }
+        .empty-state { text-align:center; padding:3rem; color:var(--text-muted); }
+        .pipeline-step { display:flex; align-items:center; gap:.75rem; padding:.75rem 0; border-bottom:1px solid var(--border-color); }
+        .pipeline-step:last-child { border-bottom:none; }
+        .step-icon { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.85rem; flex-shrink:0; }
+        .step-done { background:var(--safe-bg); color:var(--safe); }
+        .step-skip { background:var(--border-color); color:var(--text-muted); }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="dashboard.html" class="brand-logo">
+                <i class="fa-solid fa-leaf"></i> Biagiotti
+            </a>
+            <ul class="nav-links">
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="database_connection.html">Live Sync</a></li>
+                <li><a href="upload.html">Upload Data</a></li>
+                <li><a href="safety.html">Ingredient Safety</a></li>
+                <li><a href="similarity.html">Similarity Search</a></li>
+                <li><a href="skin.html">Skin-Type Analysis</a></li>
+                <li><a href="forecast.html">Forecasting</a></li>
+                <li><a href="reports.html" class="active">Reports</a></li>
+                <li><a href="login.html" style="color: var(--danger);"><i class="fa-solid fa-sign-out-alt"></i> Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="page-wrapper fade-in">
+        <div class="container">
+            <!-- Pipeline Banner -->
+            <div id="pipelineBannerContainer"></div>
+
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Data &amp; Reports Export</h1>
+                    <p class="page-subtitle">Combined pipeline report — product, safety, similarity, and forecast.</p>
+                </div>
+                <div style="display:flex;gap:.5rem;">
+                    <button id="exportJsonBtn" class="btn btn-outline">
+                        <i class="fa-solid fa-file-code"></i> Export JSON
+                    </button>
+                    <button id="exportCsvBtn" class="btn btn-outline">
+                        <i class="fa-solid fa-file-csv"></i> Export CSV
+                    </button>
+                    <button id="clearPipelineBtn" class="btn btn-outline" style="color:var(--danger);border-color:var(--danger);">
+                        <i class="fa-solid fa-trash"></i> Clear Pipeline
+                    </button>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Left: Pipeline Summary -->
+                <div class="col-md-4">
+                    <div class="card fade-in delay-1">
+                        <h3 class="card-title"><i class="fa-solid fa-link text-primary"></i> Pipeline Progress</h3>
+                        <div id="pipelineSteps"></div>
+                        <div style="margin-top:1.5rem;">
+                            <a href="dashboard.html" class="btn btn-outline btn-block">
+                                <i class="fa-solid fa-gauge-high"></i> New Analysis
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Standard Reports -->
+                    <div class="card fade-in delay-2" style="margin-top:1.5rem;">
+                        <h3 class="card-title">Standard Reports</h3>
+                        <div style="display:flex;flex-direction:column;gap:.75rem;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                                <div>
+                                    <div style="font-weight:500;font-size:.9rem;">Sales Summary</div>
+                                    <div style="font-size:.8rem;color:var(--text-muted);">Units, revenue, categories</div>
+                                </div>
+                                <span class="badge badge-primary">Daily</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                                <div>
+                                    <div style="font-weight:500;font-size:.9rem;">Safety Report</div>
+                                    <div style="font-size:.8rem;color:var(--text-muted);">Flagged products &amp; toxins</div>
+                                </div>
+                                <span class="badge badge-danger">Critical</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                                <div>
+                                    <div style="font-weight:500;font-size:.9rem;">Forecast Report</div>
+                                    <div style="font-size:.8rem;color:var(--text-muted);">30–90 day demand trends</div>
+                                </div>
+                                <span class="badge badge-safe">Weekly</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                                <div>
+                                    <div style="font-weight:500;font-size:.9rem;">Alternatives</div>
+                                    <div style="font-size:.8rem;color:var(--text-muted);">AI-generated substitutes</div>
+                                </div>
+                                <span class="badge badge-primary">On Demand</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Combined Report -->
+                <div class="col-md-8">
+                    <div class="card fade-in delay-2">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+                            <h3 class="card-title" style="margin:0;">Combined Pipeline Report</h3>
+                            <span id="reportTimestamp" class="badge badge-primary" style="font-size:.75rem;"></span>
+                        </div>
+                        <div id="reportContent">
+                            <div class="empty-state">
+                                <i class="fa-solid fa-file-lines" style="font-size:2.5rem;margin-bottom:1rem;opacity:.3;"></i>
+                                <p>No pipeline data found.</p>
+                                <p style="font-size:.85rem;">Run the full pipeline: Dashboard → Safety → Similarity → Forecast</p>
+                                <a href="dashboard.html" class="btn btn-primary" style="margin-top:1rem;">
+                                    <i class="fa-solid fa-play"></i> Start Pipeline
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/pipeline.js"></script>
+    <script src="assets/api.js"></script>
+    <script src="assets/script.js"></script>
+    <script src="assets/app.js"></script>
+    <script>
+    (function () {
+        // ── Banner ────────────────────────────────────────────────────────────
+        Pipeline.renderBanner('pipelineBannerContainer');
+
+        // ── Load pipeline data ────────────────────────────────────────────────
+        var product  = Pipeline.getProduct();
+        var safety   = Pipeline.getResult('safetyResult');
+        var forecast = Pipeline.getResult('forecastResult');
+        var similar  = Pipeline.getResult('similarResult');
+
+        var hasAny = product || safety || forecast || similar;
+
+        // ── Pipeline progress ─────────────────────────────────────────────────
+        var steps = [
+            { label: 'Product Selected',    done: !!product,  icon: 'fa-box-open',         href: 'dashboard.html' },
+            { label: 'Safety Analyzed',     done: !!safety,   icon: 'fa-flask',             href: 'safety.html'    },
+            { label: 'Alternatives Found',  done: !!similar,  icon: 'fa-arrows-rotate',    href: 'similarity.html'},
+            { label: 'Forecast Generated',  done: !!forecast, icon: 'fa-chart-line',        href: 'forecast.html'  },
+        ];
+
+        var stepsEl = document.getElementById('pipelineSteps');
+        stepsEl.innerHTML = '';
+        steps.forEach(function (s) {
+            var div = document.createElement('div');
+            div.className = 'pipeline-step';
+            div.innerHTML =
+                '<div class="step-icon ' + (s.done ? 'step-done' : 'step-skip') + '">' +
+                    '<i class="fa-solid ' + s.icon + '"></i>' +
+                '</div>' +
+                '<div style="flex:1;">' +
+                    '<div style="font-weight:500;font-size:.9rem;color:var(--text-dark);">' + s.label + '</div>' +
+                    (!s.done ? '<a href="' + s.href + '" style="font-size:.75rem;color:var(--primary);">Run now →</a>' : '') +
+                '</div>' +
+                '<i class="fa-solid ' + (s.done ? 'fa-circle-check' : 'fa-circle') + '" ' +
+                    'style="color:' + (s.done ? 'var(--safe)' : 'var(--border-color)') + ';"></i>';
+            stepsEl.appendChild(div);
+        });
+
+        // ── Timestamp ─────────────────────────────────────────────────────────
+        document.getElementById('reportTimestamp').textContent =
+            hasAny ? 'Generated ' + new Date().toLocaleString() : '';
+
+        // ── Combined Report ───────────────────────────────────────────────────
+        if (!hasAny) return; // leave empty-state visible
+
+        var html = '';
+
+        // Product
+        if (product) {
+            html += '<div class="report-section">' +
+                '<h3><i class="fa-solid fa-box-open"></i> Product</h3>' +
+                kv('Product ID',   product.product_id || '—') +
+                kv('Product Name', product.product_name || '—') +
+                '</div>';
+        }
+
+        // Safety
+        if (safety) {
+            var statusColor = safety.status === 'Safe' ? 'var(--safe)' : safety.status === 'Moderate' ? 'var(--warning)' : 'var(--danger)';
+            html += '<div class="report-section">' +
+                '<h3><i class="fa-solid fa-flask"></i> Safety Analysis</h3>' +
+                kv('Status',         '<span style="color:' + statusColor + ';font-weight:700;">' + safety.status + '</span>') +
+                kv('Safety Score',   safety.safety_score ? safety.safety_score.toFixed(0) + '/100' : '—') +
+                kv('Toxicity Level', safety.toxicity_level ? safety.toxicity_level.toFixed(1) + '/10' : '—') +
+                kv('Harmful Found',  safety.harmful_count !== undefined ? safety.harmful_count : '—') +
+                kv('Recommendation', safety.recommendation || '—') +
+                kv('Analyzed At',    safety.analyzed_at ? new Date(safety.analyzed_at).toLocaleString() : '—');
+            if (safety.harmful_ingredients && safety.harmful_ingredients.length) {
+                html += '<div style="margin-top:.5rem;">' +
+                    '<div class="kv-key" style="margin-bottom:.4rem;">Harmful Ingredients:</div>';
+                safety.harmful_ingredients.forEach(function (h) {
+                    html += '<div style="font-size:.85rem;padding:.25rem .5rem;background:var(--danger-bg);border-radius:4px;margin-bottom:.3rem;">' +
+                        '<strong>' + esc(h.name) + '</strong> — ' + esc(h.reason) +
+                        ' <span style="float:right;color:var(--danger);">Sev ' + (h.severity||'?') + '/10</span></div>';
+                });
+                html += '</div>';
+            }
+            html += '</div>';
+        }
+
+        // Similarity
+        if (similar && similar.results && similar.results.length) {
+            html += '<div class="report-section">' +
+                '<h3><i class="fa-solid fa-arrows-rotate"></i> Similar / Safer Alternatives</h3>';
+            similar.results.slice(0, 5).forEach(function (p) {
+                html += kv('#' + p.rank + ' ' + esc(p.product_name),
+                    '<span style="color:' + (p.similarity >= .8 ? 'var(--safe)' : 'var(--warning)') + ';">' +
+                    Math.round(p.similarity * 100) + '% match</span> — ' + esc(p.product_id));
+            });
+            html += '</div>';
+        }
+
+        // Forecast
+        if (forecast) {
+            var trendColor = forecast.trend === 'rising' ? 'var(--safe)' : forecast.trend === 'stable' ? 'var(--primary)' : 'var(--danger)';
+            html += '<div class="report-section">' +
+                '<h3><i class="fa-solid fa-chart-line"></i> Demand Forecast</h3>' +
+                kv('Product ID',       forecast.product_id || '—') +
+                kv('Weeks Forecasted', forecast.steps ? forecast.steps + ' weeks' : '—') +
+                kv('Est. Total Demand',forecast.total_demand ? forecast.total_demand.toLocaleString() + ' units' : '—') +
+                kv('Trend',            '<span style="color:' + trendColor + ';font-weight:700;">' + (forecast.trend || '—') + '</span>') +
+                kv('Recommendation',   forecast.recommendation || '—');
+            if (forecast.forecast && forecast.forecast.length) {
+                html += '<div style="margin-top:.5rem;">' +
+                    '<div class="kv-key" style="margin-bottom:.4rem;">Weekly Forecast Values:</div>' +
+                    '<div style="font-size:.8rem;background:var(--bg-body);padding:.5rem;border-radius:4px;font-family:monospace;">' +
+                    forecast.forecast.map(function(v,i){ return 'Wk+'+(i+1)+': '+parseFloat(v).toFixed(1); }).join('  |  ') +
+                    '</div></div>';
+            }
+            html += '</div>';
+        }
+
+        document.getElementById('reportContent').innerHTML = html;
+
+        // ── Export ─────────────────────────────────────────────────────────────
+        var fullReport = { product: product, safety: safety, similarity: similar, forecast: forecast, generated_at: new Date().toISOString() };
+
+        document.getElementById('exportJsonBtn').addEventListener('click', function () {
+            var blob = new Blob([JSON.stringify(fullReport, null, 2)], { type: 'application/json' });
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'biagiotti_report_' + (product ? product.product_id : 'pipeline') + '.json';
+            a.click();
+        });
+
+        document.getElementById('exportCsvBtn').addEventListener('click', function () {
+            var rows = [
+                ['Field', 'Value'],
+                ['Product ID',       product ? product.product_id : ''],
+                ['Product Name',     product ? product.product_name : ''],
+                ['Safety Status',    safety  ? safety.status : ''],
+                ['Safety Score',     safety  ? safety.safety_score : ''],
+                ['Toxicity Level',   safety  ? safety.toxicity_level : ''],
+                ['Harmful Count',    safety  ? safety.harmful_count : ''],
+                ['Forecast Steps',   forecast ? forecast.steps : ''],
+                ['Total Demand',     forecast ? forecast.total_demand : ''],
+                ['Trend',            forecast ? forecast.trend : ''],
+                ['Recommendation',   forecast ? forecast.recommendation : ''],
+                ['Similar Products', similar  ? similar.results.length : 0],
+                ['Generated At',     new Date().toISOString()],
+            ];
+            var csv = rows.map(function(r){ return r.map(function(c){ return '"'+(c||'').toString().replace(/"/g,'""')+'"'; }).join(','); }).join('\n');
+            var blob = new Blob([csv], { type: 'text/csv' });
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'biagiotti_report_' + (product ? product.product_id : 'pipeline') + '.csv';
+            a.click();
+        });
+
+        document.getElementById('clearPipelineBtn').addEventListener('click', function () {
+            if (confirm('Clear all pipeline data? This will reset the product context and all results.')) {
+                Pipeline.clearAll();
+                location.reload();
+            }
+        });
+
+        // ── Helpers ───────────────────────────────────────────────────────────
+        function kv(k, v) {
+            return '<div class="kv-row"><span class="kv-key">' + k + '</span><span class="kv-val">' + v + '</span></div>';
+        }
+        function esc(s) {
+            return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+    })();
+    </script>
+</body>
+</html>

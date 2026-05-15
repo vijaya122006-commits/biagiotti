@@ -1,0 +1,3 @@
+# services/__init__.py
+# Re-exports from ml_service so controllers can use:
+#   from services.ml_service import predict_skin, ...

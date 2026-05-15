@@ -1,0 +1,72 @@
+{
+  "generated_at": "2026-04-08T06:11:18.702994Z",
+  "models": {
+    "similarity": {
+      "sample_product": "facial treatment essence",
+      "top_5_similar": [
+        {
+          "name": "facial treatment essence mini",
+          "score": 1.0
+        },
+        {
+          "name": "facial treatment essence karan singh limited edition",
+          "score": 0.8476
+        },
+        {
+          "name": "facial treatment clear lotion toner",
+          "score": 0.4948
+        },
+        {
+          "name": "facial treatment mask",
+          "score": 0.2944
+        },
+        {
+          "name": "facial treatment cleanser",
+          "score": 0.2932
+        }
+      ],
+      "n_products": 994,
+      "n_features": 5000,
+      "elapsed": "0.1s"
+    },
+    "harmful": {
+      "n_products": 18658,
+      "mean_safety": 100.0,
+      "n_safe": 18658,
+      "n_moderate": 0,
+      "n_unsafe": 0,
+      "elapsed": "1.0s"
+    },
+    "skin": {
+      "accuracy": 0.7,
+      "f1_weighted": 0.6961,
+      "f1_macro": 0.6611,
+      "n_classes": 4,
+      "n_train": 5799,
+      "n_test": 1450,
+      "elapsed": "0.5s"
+    },
+    "sentiment": {
+      "mode": "vader",
+      "proxy_accuracy": 0.7507,
+      "distribution": {
+        "neutral": 1.0
+      },
+      "elapsed": "0.7s"
+    },
+    "arima": {
+      "n_products": 5,
+      "mean_rmse": 163.0473,
+      "mean_mae": 162.8866,
+      "elapsed": "0.3s"
+    },
+    "rf_forecast": {
+      "rmse": 314.1616,
+      "mae": 74.4006,
+      "r2": -0.0019,
+      "n_features": 10,
+      "n_estimators": 200,
+      "elapsed": "2.5s"
+    }
+  }
+}

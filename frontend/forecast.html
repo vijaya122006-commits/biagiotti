@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Demand Intelligence — Biagiotti</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <style>
+    :root {
+      --bg: #FAFAF8;
+      --surface: #FFFFFF;
+      --surface2: #F5F3EF;
+      --surface3: #F0EDE8;
+      --border: #EDE8E3;
+      --border2: #DDD6CE;
+      --accent: #C9A99A;
+      --accent2: #A07B6A;
+      --accent-light: #F0E4DC;
+      --success: #5A8A6A;
+      --danger: #C0392B;
+      --warn: #C67C3A;
+      --info: #5A6E9E;
+      --text: #2C2C2C;
+      --muted: #9E9890;
+      --muted2: #6B6560;
+      --radius: 12px;
+      --shadow-sm: 0 1px 4px rgba(160, 120, 100, 0.08);
+      --shadow-md: 0 2px 12px rgba(160, 120, 100, 0.12);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, 'Segoe UI', Georgia, serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+    
+    .topbar { position: sticky; top: 0; z-index: 1000; display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; height: 60px; background: #fff; border-bottom: 1px solid var(--border); box-shadow: var(--shadow-sm); }
+    .topbar-left { display: flex; align-items: center; gap: 1rem; }
+    .btn-back { padding: 6px 14px; background: var(--surface2); border: 1px solid var(--border2); color: var(--accent2); border-radius: 6px; cursor: pointer; font-size: 0.82rem; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .btn-back:hover { background: var(--accent-light); border-color: var(--accent); }
+    .logo { font-size: 1rem; font-weight: 700; color: var(--accent2); letter-spacing: 0.06em; text-transform: uppercase; }
+
+    .main { padding: 1.5rem; max-width: 1400px; margin: 0 auto; }
+    
+    .hero-panel { display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem; margin-bottom: 2rem; }
+    @media (max-width: 1100px) { .hero-panel { grid-template-columns: 1fr; } }
+
+    .panel { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow: hidden; }
+    .panel-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .panel-title { font-weight: 700; font-size: 0.85rem; color: var(--muted2); text-transform: uppercase; letter-spacing: 0.08em; display: flex; align-items: center; gap: 8px; }
+
+    .chart-box { padding: 1.5rem; height: 450px; position: relative; }
+    .insight-box { padding: 1.5rem; background: var(--surface2); display: flex; flex-direction: column; gap: 1.25rem; }
+
+    /* Product Card Grid */
+    .section-header { margin: 2rem 0 1rem; display: flex; align-items: center; justify-content: space-between; }
+    .section-title { font-size: 1rem; font-weight: 800; color: var(--accent2); text-transform: uppercase; letter-spacing: 0.1em; }
+    
+    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; margin-top: 1rem; }
+    .p-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; cursor: pointer; transition: all 0.2s; position: relative; }
+    .p-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--accent); }
+    .p-card.active { border: 2px solid var(--accent); background: var(--accent-light); }
+    
+    .p-img-wrap { height: 140px; border-radius: 8px; background: var(--surface2); display: flex; align-items: center; justify-content: center; margin-bottom: 0.75rem; overflow: hidden; position: relative; }
+    .p-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+    .p-emoji { font-size: 2.5rem; }
+    .p-badge { position: absolute; top: 8px; right: 8px; background: var(--success); color: #fff; font-size: 0.65rem; font-weight: 800; padding: 2px 8px; border-radius: 10px; }
+
+    .p-name { font-weight: 700; font-size: 0.88rem; color: var(--text); margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .p-brand { font-size: 0.75rem; color: var(--muted2); margin-bottom: 8px; }
+    
+    .p-stats { display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 8px; border-top: 1px solid var(--border); }
+    .p-trend { font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; gap: 4px; }
+    .up { color: var(--success); }
+    .down { color: var(--danger); }
+    .stable { color: var(--info); }
+
+    .horizon-select { padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border2); background: var(--surface); font-size: 0.82rem; font-weight: 600; color: var(--text); cursor: pointer; outline: none; }
+
+    /* Loading Overlay */
+    .loader { position: fixed; inset: 0; background: rgba(250, 250, 248, 0.9); backdrop-filter: blur(4px); z-index: 2000; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 1rem; }
+    .spinner { width: 40px; height: 40px; border: 3px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Active Details */
+    .active-header { display: flex; gap: 1.5rem; align-items: center; margin-bottom: 1.5rem; }
+    .active-img { width: 80px; height: 80px; border-radius: 12px; object-fit: cover; border: 1px solid var(--border); }
+    .active-title h2 { font-size: 1.25rem; font-weight: 800; color: var(--text); }
+    .active-title p { color: var(--muted2); font-size: 0.85rem; font-weight: 500; }
+
+    .verdict-box { padding: 1.25rem; border-radius: 10px; border: 1px solid; margin-bottom: 1rem; }
+    .v-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; }
+    .v-text { font-size: 0.82rem; color: var(--muted2); line-height: 1.5; }
+
+    .metric-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; padding: 4px 0; }
+    .m-label { color: var(--muted2); font-weight: 500; }
+    .m-value { font-weight: 700; color: var(--text); }
+  </style>
+</head>
+<body>
+  <div class="loader" id="loadingOverlay">
+    <div class="spinner"></div>
+    <p style="font-weight: 700; color: var(--accent2); letter-spacing: 0.05em;">Synchronizing Forecast Models...</p>
+  </div>
+
+  <nav class="topbar">
+    <div class="topbar-left">
+      <a href="dashboard.html" class="btn-back">← Dashboard</a>
+      <a href="database_connection.html" class="btn-back" style="background: var(--accent-light); border-color: var(--accent);"><i class="fa-solid fa-database"></i> Live Sync</a>
+      <div class="logo">🔬 Biagiotti Demand Intel</div>
+    </div>
+    <div class="topbar-right" style="display:flex; align-items:center; gap:1.25rem;">
+      <div style="display:flex; align-items:center; gap:0.75rem;">
+        <span style="font-size: 0.72rem; font-weight: 800; color: var(--muted2); text-transform: uppercase; letter-spacing: 0.05em;">Window:</span>
+        <select id="horizon-select" class="horizon-select" onchange="init()">
+          <option value="1">📍 Today's Forecast</option>
+          <option value="7">Next 7 Days</option>
+          <option value="28" selected>Next 4 Weeks</option>
+          <option value="90">Next 3 Months</option>
+        </select>
+      </div>
+      <button onclick="location.href='dashboard.html'" style="padding:6px 14px;background:transparent;border:1px solid #E8B4AE;color:#C0392B;border-radius:6px;cursor:pointer;font-size:0.8rem;font-weight:600">Logout</button>
+    </div>
+  </nav>
+
+  <div class="main">
+    <div class="hero-panel">
+      <!-- Main Forecast Chart -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title" id="active-product-title"><i class="fas fa-chart-line"></i> Demand Forecast Analysis</div>
+          <div id="active-growth-pill"></div>
+        </div>
+        <div class="chart-box">
+          <div id="chart-placeholder" style="height:100%; display:flex; align-items:center; justify-content:center; color:var(--muted)">
+            Select a product below to view detailed demand insights.
+          </div>
+          <canvas id="main-forecast-chart" style="display:none"></canvas>
+        </div>
+      </div>
+
+      <!-- Insight Sidebar -->
+      <div class="panel" id="insight-panel" style="display:none">
+        <div class="panel-header">
+          <div class="panel-title"><i class="fas fa-lightbulb"></i> Retail Intelligence</div>
+        </div>
+        <div class="insight-box">
+          <div class="active-header">
+            <img src="" id="active-p-img" class="active-img" onerror="this.style.display='none'">
+            <div class="active-title">
+              <h2 id="active-p-name">—</h2>
+              <p id="active-p-brand">—</p>
+            </div>
+          </div>
+          
+          <div id="verdict-container"></div>
+
+          <div class="metrics-list">
+            <div class="metric-row"><span class="m-label">Days of Stock</span><span class="m-value" id="m-days">—</span></div>
+            <div class="metric-row"><span class="m-label">Reorder Point</span><span class="m-value" id="m-reorder">—</span></div>
+            <div class="metric-row"><span class="m-label">Forecast Trend</span><span class="m-value" id="m-trend">—</span></div>
+            <div class="metric-row"><span class="m-label">Profit Margin</span><span class="m-value" id="m-margin">—</span></div>
+            <div class="metric-row"><span class="m-label">Stockout Risk</span><span class="m-value" id="m-risk">—</span></div>
+          </div>
+
+          <button onclick="goToDetail()" style="width:100%; padding:10px; background:var(--accent); color:#fff; border:none; border-radius:8px; font-weight:700; cursor:pointer; margin-top:0.5rem">View Full Product Analysis →</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <div class="section-title">Trending Products at Risk</div>
+    </div>
+    <div class="product-grid" id="trending-grid">
+      <!-- Cards injected by JS -->
+    </div>
+  </div>
+
+  <script src="assets/api.js"></script>
+  <script>
+    let currentProducts = [];
+    let activeProduct = null;
+    let mainChart = null;
+
+    const UI = {
+      horizon: document.getElementById('horizon-select'),
+      trendingGrid: document.getElementById('trending-grid'),
+      loader: document.getElementById('loadingOverlay'),
+      chartBox: document.getElementById('main-forecast-chart'),
+      placeholder: document.getElementById('chart-placeholder'),
+      insightPanel: document.getElementById('insight-panel')
+    };
+
+    function showLoading(s) { UI.loader.style.display = s ? 'flex' : 'none'; }
+    function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    async function init() {
+      showLoading(true);
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const pidParam = urlParams.get('product_id');
+
+        // Load 12 top products
+        const res = await API.getProducts({ per_page: 12 });
+        currentProducts = res.products || [];
+
+        // Ensure deep-linked product is included
+        if (pidParam && !currentProducts.find(p => p.product_id === pidParam)) {
+          try {
+            const detail = await API.getProductAnalysis(pidParam);
+            if (detail.product) {
+              currentProducts.unshift({
+                product_id: detail.product.product_id,
+                product_name: detail.product.product_name,
+                brand: detail.product.brand,
+                category: detail.product.category,
+                price: detail.product.price,
+                image_url: detail.product.image_url
+              });
+            }
+          } catch (e) {}
+        }
+
+        if (currentProducts.length === 0) {
+          UI.trendingGrid.innerHTML = '<div style="padding:3rem;text-align:center;grid-column:1/-1;color:var(--muted)">No products found in database.</div>';
+          return;
+        }
+
+        // 1. Initial render of grid (without forecasts yet)
+        renderTrending();
+
+        // 2. Identify target product and load its forecast FIRST
+        const toSelectId = pidParam || (currentProducts[0] ? currentProducts[0].product_id : null);
+        if (toSelectId) {
+          const targetIdx = currentProducts.findIndex(p => p.product_id === toSelectId);
+          if (targetIdx !== -1) {
+            const p = currentProducts[targetIdx];
+            try {
+              const res = await API.forecastSales(null, null, p.product_id, UI.horizon.value);
+              p.forecast = res.data || res;
+              selectProduct(toSelectId);
+            } catch (e) { console.error("Initial forecast failed", e); }
+          }
+        }
+
+        // 3. Hide loader as soon as primary product is ready
+        showLoading(false);
+
+        // 4. Background load the rest of the forecasts
+        refreshForecastsInBackground();
+
+      } catch (err) {
+        console.error("Init Error:", err);
+        showLoading(false);
+      }
+    }
+
+    async function refreshForecastsInBackground() {
+      const horizon = UI.horizon.value;
+      const promises = currentProducts.map(async (p) => {
+        if (p.forecast) return; // skip already loaded
+        try {
+          const r = await API.forecastSales(null, null, p.product_id, horizon);
+          p.forecast = r.data || r;
+          renderTrending(); // Update card UI with badge/trend as they load
+        } catch (e) {}
+      });
+      await Promise.all(promises);
+    }
+
+
+    function getEmoji(cat) {
+      const map = { serum:'🧴', cream:'🧴', cleanser:'🫧', sunscreen:'🌞', lipstick:'💄', foundation:'💎', moisturizer:'💧', toner:'🌿', mask:'✨', oil:'💫' };
+      if (!cat) return '🧴';
+      for (const k in map) if (cat.toLowerCase().includes(k)) return map[k];
+      return '🧴';
+    }
+
+    function renderTrending() {
+      UI.trendingGrid.innerHTML = currentProducts.map(p => {
+        const fd = p.forecast;
+        const trend = fd ? (fd.trend || 'stable') : 'loading';
+        const growth = fd ? Math.round(fd.decision_metrics?.change_pct || 0) : null;
+        const isActive = activeProduct && activeProduct.product_id === p.product_id;
+        
+        return `
+          <div class="p-card ${isActive ? 'active' : ''}" onclick="selectProduct('${p.product_id}')">
+            <div class="p-img-wrap">
+              ${fd ? `<div class="p-badge">${growth >= 0 ? '+' : ''}${growth}% Demand</div>` : ''}
+              ${p.image_url ? `<img src="${p.image_url}" alt="">` : `<span class="p-emoji">${getEmoji(p.category)}</span>`}
+            </div>
+            <div class="p-name">${esc(p.product_name)}</div>
+            <div class="p-brand">${esc(p.brand || p.category || 'Biagiotti')}</div>
+            <div class="p-stats">
+              <span class="p-trend ${trend === 'increasing' ? 'up' : (trend === 'decreasing' ? 'down' : 'stable')}">
+                <i class="fas fa-arrow-${trend === 'increasing' ? 'up' : (trend === 'decreasing' ? 'down' : 'right')}"></i> ${trend.toUpperCase()}
+              </span>
+              <span style="font-weight:700;font-size:0.85rem">₹${Math.round(p.price || 0).toLocaleString()}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selectProduct(pid) {
+      const found = currentProducts.find(p => p.product_id === pid);
+      if (!found) return;
+      activeProduct = found;
+      
+      // Update UI cards
+      document.querySelectorAll('.p-card').forEach(c => c.classList.remove('active'));
+      renderTrending(); // Re-render to show active state
+
+      UI.placeholder.style.display = 'none';
+      UI.chartBox.style.display = 'block';
+      UI.insightPanel.style.display = 'block';
+
+      updateInsights(found);
+      renderMainChart(found.forecast);
+    }
+
+    function updateInsights(p) {
+      const fd = p.forecast;
+      document.getElementById('active-p-img').src = p.image_url || '';
+      document.getElementById('active-p-img').style.display = p.image_url ? 'block' : 'none';
+      document.getElementById('active-p-name').textContent = p.product_name;
+      document.getElementById('active-p-brand').textContent = p.brand || p.category || 'Biagiotti';
+      
+      const days = parseFloat(fd.days_of_inventory || 0);
+      const mDays = document.getElementById('m-days');
+      mDays.textContent = days.toFixed(1) + ' days';
+      mDays.style.color = days < 7 ? 'var(--danger)' : days < 14 ? 'var(--warn)' : 'var(--success)';
+
+      document.getElementById('m-reorder').textContent = Math.round(fd.reorder_point || 0).toLocaleString() + ' units';
+      document.getElementById('m-trend').textContent = (fd.trend || 'stable').toUpperCase();
+      document.getElementById('m-margin').textContent = Math.round((fd.profit_margin || 0) * 100) + '%';
+      
+      const risk = fd.stockout_risk || 'LOW';
+      const mRisk = document.getElementById('m-risk');
+      mRisk.textContent = risk;
+      mRisk.style.color = risk === 'HIGH' ? 'var(--danger)' : 'var(--success)';
+
+      // Verdict
+      const rec = (fd.recommendation || 'MAINTAIN').split(' | ')[0];
+      const verdict = document.getElementById('verdict-container');
+      const vColors = { 'AGGRESSIVE': ['#FDF0EE', '#C0392B'], 'INCREASE': ['#FDF5EE', '#C67C3A'], 'MAINTAIN': ['#EEF5F0', '#5A8A6A'], 'REDUCE': ['#EEF0F8', '#5A6E9E'] };
+      const [bg, border] = vColors[Object.keys(vColors).find(k => rec.includes(k))] || vColors['MAINTAIN'];
+      
+      verdict.innerHTML = `
+        <div class="verdict-box" style="background:${bg}; border-color:${border}">
+          <div class="v-title" style="color:${border}">${rec}</div>
+          <div class="v-text">AI predicts a ${fd.trend} trend with ${Math.round(fd.confidence_score || 85)}% confidence. Reorder at ${Math.round(fd.reorder_point).toLocaleString()} units.</div>
+        </div>
+      `;
+    }
+
+    function renderMainChart(fd) {
+      const ctx = UI.chartBox.getContext('2d');
+      if (mainChart) mainChart.destroy();
+
+      const history = fd.history || [];
+      const forecast = fd.forecast || [];
+      const labels = [...history.map((_, i) => 'Month -' + (history.length - i)), ...forecast.map((_, i) => 'Forecast ' + (i + 1))];
+      
+      const histData = [...history, ...Array(forecast.length).fill(null)];
+      const fcData = [...Array(history.length - 1).fill(null), history[history.length-1], ...forecast];
+
+      mainChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Actual Sales',
+              data: histData,
+              borderColor: 'var(--accent2)',
+              backgroundColor: 'rgba(160, 123, 106, 0.1)',
+              borderWidth: 3,
+              tension: 0.4,
+              fill: true,
+              pointRadius: 4
+            },
+            {
+              label: 'AI Prediction',
+              data: fcData,
+              borderColor: 'var(--info)',
+              borderDash: [6, 4],
+              borderWidth: 3,
+              tension: 0.4,
+              pointRadius: 4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'top', labels: { font: { weight: '700' } } },
+            tooltip: { mode: 'index', intersect: false }
+          },
+          scales: {
+            y: { beginAtZero: true, grid: { color: 'var(--border)' }, ticks: { font: { weight: '600' } } },
+            x: { grid: { display: false }, ticks: { font: { weight: '600' } } }
+          }
+        }
+      });
+    }
+
+    function goToDetail() {
+      if (activeProduct) window.location.href = `product_detail.html?product_id=${activeProduct.product_id}`;
+    }
+
+    // Init on load
+    init();
+  </script>
+</body>
+</html>

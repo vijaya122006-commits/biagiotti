@@ -1,0 +1,4 @@
+product_id,product_name,brand,price,ingredients
+PRD_TEST_001,Testing Serum,Biagiotti,25.0,"Water, Glycerin, Niacinamide"
+PRD_TEST_002,Testing Cream,Biagiotti,30.0,"Water, Dimethicone, Parabens"
+PRD_TEST_003,Safe Cleanser,Biagiotti,15.0,"Water, Aloe, Zinc"

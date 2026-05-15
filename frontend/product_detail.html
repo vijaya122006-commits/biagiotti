@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Product Analysis — Cosmetic Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #FAFAF8;
+      --surface: #FFFFFF;
+      --surface2: #F5F3EF;
+      --border: #EDE8E3;
+      --border2: #DDD6CE;
+      --accent: #C9A99A;
+      --accent2: #A07B6A;
+      --accent-light: #F0E4DC;
+      --success: #5A8A6A;
+      --danger: #C0392B;
+      --warn: #C67C3A;
+      --info: #5A6E9E;
+      --text: #2C2C2C;
+      --muted: #9E9890;
+      --muted2: #6B6560;
+      --radius: 12px;
+      --shadow-sm: 0 1px 4px rgba(160, 120, 100, 0.08);
+      --shadow-md: 0 2px 12px rgba(160, 120, 100, 0.12);
+    }
+
+    .rec-card {
+      border-left: 4px solid #DDD6CE;
+      background: #fff;
+      padding: 1.25rem;
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+      position: relative;
+      transition: transform 0.2s, box-shadow 0.2s;
+      border: 1px solid #EDE8E3;
+    }
+
+    .rec-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+    }
+
+    .rec-trending {
+      border-left-color: #5A8A6A;
+      background: #F4F9F6;
+    }
+
+    .rec-confident {
+      border-left-color: #D4AF37;
+      background: #FFFDF0;
+      border: 1px solid rgba(212, 175, 55, 0.2);
+    }
+
+    .trending-badge {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: #5A8A6A;
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .confident-badge {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: #D4AF37;
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    body {
+      font-family: -apple-system, 'Segoe UI', Georgia, serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.5rem;
+      height: 60px;
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow-sm)
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem
+    }
+
+    .btn-back {
+      padding: 6px 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      color: var(--accent2);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      text-decoration: none;
+      font-weight: 500
+    }
+
+    .btn-back:hover {
+      background: var(--accent-light);
+      border-color: var(--accent)
+    }
+
+    .product-header-title {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--accent2);
+      letter-spacing: 0.05em
+    }
+
+    .main {
+      padding: 1.5rem;
+      max-width: 1400px;
+      margin: 0 auto
+    }
+
+    .product-hero {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 1.5rem;
+      align-items: center;
+      box-shadow: var(--shadow-sm)
+    }
+
+    .product-name {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+      color: var(--text)
+    }
+
+    .product-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 0.75rem
+    }
+
+    .meta-chip {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.78rem;
+      color: var(--muted2);
+      background: var(--surface2);
+      padding: 5px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--border)
+    }
+
+    .price-badge {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--accent2)
+    }
+
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      overflow-x: auto;
+      padding-bottom: 4px
+    }
+
+    .tab-btn {
+      padding: 0.6rem 1.25rem;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--muted);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 500;
+      white-space: nowrap;
+      transition: all 0.2s;
+      letter-spacing: 0.03em
+    }
+
+    .tab-btn.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      box-shadow: 0 2px 8px rgba(160, 120, 100, 0.25)
+    }
+
+    .tab-panel {
+      display: none
+    }
+
+    .tab-panel.active {
+      display: block
+    }
+
+    .panel {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm)
+    }
+
+    .panel-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted)
+    }
+
+    .section-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem
+    }
+
+    @media(max-width:900px) {
+      .section-grid {
+        grid-template-columns: 1fr
+      }
+    }
+
+    .stat-box {
+      background: var(--surface2);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      border: 1px solid var(--border)
+    }
+
+    .stat-label {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 4px;
+      font-weight: 600
+    }
+
+    .stat-value {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text)
+    }
+
+    .stat-sub {
+      font-size: 0.75rem;
+      color: var(--muted2);
+      margin-top: 3px
+    }
+
+    .decision-box {
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      border: 1px solid
+    }
+
+    .decision-aggressive {
+      background: #FDF0EE;
+      border-color: #E8B4AE
+    }
+
+    .decision-increase {
+      background: #FDF5EE;
+      border-color: #E8C8A0
+    }
+
+    .decision-maintain {
+      background: #EEF5F0;
+      border-color: #A8CEB4
+    }
+
+    .decision-reduce {
+      background: #EEF0F8;
+      border-color: #B0BCE0
+    }
+
+    .decision-title {
+      font-weight: 700;
+      font-size: 1rem;
+      margin-bottom: 6px;
+      color: var(--text)
+    }
+
+    .decision-reason {
+      font-size: 0.85rem;
+      color: var(--muted2);
+      line-height: 1.5
+    }
+
+    .chart-container {
+      padding: 1.5rem;
+      height: 340px;
+      position: relative
+    }
+
+    .chart-legend-note {
+      padding: 0 1.5rem 1rem;
+      font-size: 0.75rem;
+      color: var(--muted2);
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap
+    }
+
+    .chart-legend-dot {
+      display: inline-block;
+      width: 12px;
+      height: 3px;
+      border-radius: 2px;
+      vertical-align: middle;
+      margin-right: 5px
+    }
+
+    .safety-score-ring {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.5rem
+    }
+
+    .ring-value {
+      font-size: 3rem;
+      font-weight: 700
+    }
+
+    .ring-label {
+      font-size: 0.85rem;
+      color: var(--muted2);
+      margin-top: 4px
+    }
+
+    .progress-bar-container {
+      padding: 0 1.5rem 1.5rem
+    }
+
+    .pb-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--muted2)
+    }
+
+    .pb-bg {
+      height: 8px;
+      background: var(--surface2);
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid var(--border)
+    }
+
+    .pb-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 1s ease
+    }
+
+    .harmful-list {
+      padding: 1.5rem
+    }
+
+    .harmful-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      padding: 0.85rem;
+      border-radius: 8px;
+      margin-bottom: 0.75rem;
+      border: 1px solid;
+    }
+
+    .risk-high {
+      background: #FDF0EE;
+      border-color: #E8B4AE;
+    }
+
+    .risk-medium {
+      background: #FDF5EE;
+      border-color: #E8C8A0;
+    }
+
+    .risk-low {
+      background: #EEF0F8;
+      border-color: #B0BCE0;
+    }
+
+    .harmful-icon {
+      font-size: 1.2rem;
+      flex-shrink: 0;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      color: #fff;
+    }
+
+    .icon-high {
+      background: #C0392B;
+    }
+
+    .icon-medium {
+      background: #C67C3A;
+    }
+
+    .icon-low {
+      background: #5A6E9E;
+    }
+
+    .safe-ingredients-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .safe-ingredient-pill {
+      background: #F4F9F6;
+      border: 1px solid #DCECE2;
+      color: #4A6A55;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 500;
+      cursor: help;
+    }
+
+    .harmful-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--text)
+    }
+
+    .harmful-reason {
+      font-size: 0.78rem;
+      color: var(--muted2);
+      margin-top: 2px
+    }
+
+    .harmful-sev {
+      font-size: 0.72rem;
+      color: #C0392B;
+      margin-top: 3px;
+      font-weight: 600
+    }
+
+    .rating-bars {
+      padding: 1.5rem
+    }
+
+    .rating-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem
+    }
+
+    .rating-label {
+      font-size: 0.82rem;
+      color: var(--muted2);
+      min-width: 50px;
+      text-align: right
+    }
+
+    .rating-bg {
+      flex: 1;
+      height: 8px;
+      background: var(--surface2);
+      border-radius: 4px;
+      overflow: hidden
+    }
+
+    .rating-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 4px;
+      transition: width 0.8s ease
+    }
+
+    .rating-count {
+      font-size: 0.78rem;
+      color: var(--muted2);
+      min-width: 30px
+    }
+
+    .review-item {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border)
+    }
+
+    .review-item:last-child {
+      border-bottom: none
+    }
+
+    .review-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px
+    }
+
+    .reviewer-name {
+      font-weight: 600;
+      font-size: 0.88rem;
+      color: var(--text)
+    }
+
+    .review-rating {
+      color: var(--warn);
+      font-size: 0.85rem
+    }
+
+    .review-body {
+      font-size: 0.83rem;
+      color: var(--muted2);
+      line-height: 1.5
+    }
+
+    .synthetic-badge {
+      font-size: 0.68rem;
+      padding: 2px 7px;
+      background: var(--accent-light);
+      color: var(--accent2);
+      border: 1px solid var(--accent);
+      border-radius: 4px;
+      margin-left: 6px;
+      font-weight: 600
+    }
+
+    .sentiment-bars {
+      display: flex;
+      gap: 1rem;
+      padding: 1rem 1.5rem;
+      flex-wrap: wrap
+    }
+
+    .sent-item {
+      flex: 1;
+      min-width: 80px;
+      text-align: center;
+      padding: 0.75rem;
+      background: var(--surface2);
+      border-radius: 8px;
+      border: 1px solid var(--border)
+    }
+
+    .sent-pct {
+      font-size: 1.4rem;
+      font-weight: 700
+    }
+
+    .sent-label {
+      font-size: 0.75rem;
+      color: var(--muted2);
+      margin-top: 2px
+    }
+
+    .sim-product-list {
+      padding: 1.5rem
+    }
+
+    .sim-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      background: var(--surface2);
+      border-radius: 8px;
+      margin-bottom: 0.75rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: 1px solid var(--border)
+    }
+
+    .sim-item:hover {
+      background: var(--accent-light);
+      border-color: var(--accent);
+      transform: translateX(4px)
+    }
+
+    .sim-rank {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--accent2);
+      min-width: 28px
+    }
+
+    .sim-name {
+      font-weight: 600;
+      font-size: 0.88rem;
+      color: var(--text)
+    }
+
+    .sim-brand {
+      font-size: 0.75rem;
+      color: var(--muted2)
+    }
+
+    .sim-price {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--accent2)
+    }
+
+    /* Recommendation cards */
+    .rec-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+      transition: box-shadow 0.2s;
+      position: relative
+    }
+
+    .rec-card:hover {
+      box-shadow: var(--shadow-md)
+    }
+
+    .rec-card.rec-trending {
+      border-left: 3px solid #5A8A6A;
+      background: linear-gradient(to right, rgba(90, 138, 106, 0.04), #fff)
+    }
+
+    .rec-card.rec-confident {
+      border-left: 3px solid #A07B6A;
+      background: linear-gradient(to right, rgba(160, 123, 106, 0.07), #fff);
+      box-shadow: 0 2px 12px rgba(160, 123, 106, 0.15)
+    }
+
+    .trending-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: #EEF5F0;
+      color: #5A8A6A;
+      border: 1px solid #A8CEB4;
+      border-radius: 12px;
+      padding: 2px 10px;
+      font-size: 0.72rem;
+      font-weight: 600
+    }
+
+    .confident-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: #F5EDE8;
+      color: #A07B6A;
+      border: 1px solid #C9A99A;
+      border-radius: 12px;
+      padding: 2px 10px;
+      font-size: 0.72rem;
+      font-weight: 600
+    }
+
+    .rec-rank {
+      font-size: 0.68rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 6px
+    }
+
+    .rec-name {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 2px
+    }
+
+    .rec-brand {
+      font-size: 0.78rem;
+      color: var(--muted2);
+      margin-bottom: 8px
+    }
+
+    .rec-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 10px
+    }
+
+    .rec-tag {
+      font-size: 0.72rem;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: var(--surface2);
+      color: var(--muted2);
+      border: 1px solid var(--border)
+    }
+
+    .rec-why {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border)
+    }
+
+    .rec-why-title {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 5px;
+      font-weight: 600
+    }
+
+    .rec-reasons li {
+      font-size: 0.82rem;
+      color: var(--muted2);
+      padding: 2px 0;
+      list-style: none
+    }
+
+    .rec-reasons li::before {
+      content: '✓ ';
+      color: #5A8A6A;
+      font-weight: 700
+    }
+
+    .rec-better {
+      margin-top: 8px;
+      padding: 8px 12px;
+      background: var(--accent-light);
+      border-radius: 6px
+    }
+
+    .rec-better-title {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--accent2);
+      margin-bottom: 3px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em
+    }
+
+    .rec-better-item {
+      font-size: 0.8rem;
+      color: var(--accent2)
+    }
+
+    .rec-stats {
+      display: flex;
+      gap: 1rem;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap
+    }
+
+    .rec-stat-label {
+      display: block;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted)
+    }
+
+    .rec-stat-value {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text)
+    }
+
+    .rec-stat-value.increasing {
+      color: #5A8A6A
+    }
+
+    .rec-stat-value.decreasing {
+      color: #C0392B
+    }
+
+    .btn-view-rec {
+      margin-top: 10px;
+      width: 100%;
+      background: #F0E4DC;
+      color: #A07B6A;
+      border: 1px solid #C9A99A;
+      border-radius: 6px;
+      padding: 7px 16px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s
+    }
+
+    .btn-view-rec:hover {
+      background: #C9A99A;
+      color: #fff
+    }
+
+    .skin-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      padding: 1.5rem
+    }
+
+    .skin-tag {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      background: var(--accent-light);
+      color: var(--accent2);
+      border: 1px solid var(--accent)
+    }
+
+    .loading-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem;
+      gap: 1rem;
+      color: var(--muted2)
+    }
+
+    .loading-spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--border2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite
+    }
+
+    .empty-state {
+      padding: 3rem;
+      text-align: center;
+      color: var(--muted2)
+    }
+
+    .empty-state .empty-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      opacity: 0.5
+    }
+
+    .empty-state p {
+      font-size: 0.9rem
+    }
+
+    .sim-match {
+      font-size: 0.72rem;
+      background: var(--accent-light);
+      color: var(--accent2);
+      border: 1px solid var(--accent);
+      border-radius: 10px;
+      padding: 1px 7px;
+      font-weight: 600
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="topbar">
+    <div class="topbar-left">
+      <a href="dashboard.html" class="btn-back">← Dashboard</a>
+      <a href="database_connection.html" class="btn-back"
+        style="background: var(--accent-light); border-color: var(--accent);"><i class="fa-solid fa-database"></i> Live
+        Sync</a>
+      <div class="product-header-title" id="header-product-name">Loading product...</div>
+    </div>
+  </nav>
+
+  <div class="main" id="main-content">
+    <div class="loading-state">
+      <div class="loading-spinner"></div><span>Loading product analysis...</span>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') ? window.location.origin : 'http://localhost:5050';
+    function authHeader() { return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') }; }
+    function escHtml(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+    const params = new URLSearchParams(location.search);
+    const productId = params.get('product_id');
+
+    async function loadProduct() {
+      if (!localStorage.getItem('token')) { location.href = 'index.html'; return; }
+      if (!productId) { document.getElementById('main-content').innerHTML = '<div class="loading-state">No product selected.</div>'; return; }
+
+      // Start both fetches immediately in parallel
+      const analysisPromise = fetch(`${API_BASE}/api/products/${encodeURIComponent(productId)}/analysis`, { headers: authHeader() });
+      const recsPromise = fetch(`${API_BASE}/api/products/${encodeURIComponent(productId)}/recommendations?top_n=5`, { headers: authHeader() });
+
+      try {
+        const res = await analysisPromise;
+        if (res.status === 401) { location.href = 'index.html'; return; }
+        const data = await res.json();
+
+        // Render the main UI (which creates the #rec-container)
+        renderAll(data);
+
+        // Now render recommendations from the already-started promise
+        const recsRes = await recsPromise;
+        const recsData = await recsRes.json();
+        renderRecommendations(recsData);
+      } catch (e) {
+        document.getElementById('main-content').innerHTML = `<div class="loading-state">Failed to load product data: ${e.message}</div>`;
+      }
+    }
+
+    function renderAll(d) {
+      const p = d.product || {};
+      const fc = d.forecast || {};
+      const skin = d.skin_analysis || {};
+      const safety = d.safety || {};
+      const reviews = d.reviews || {};
+      const inv = d.inventory || {};
+      const similar = d.similar_products || [];
+
+      document.getElementById('header-product-name').textContent = p.product_name || 'Product';
+
+      const decisionClass = s => {
+        if (!s) return 'decision-maintain';
+        s = s.toUpperCase();
+        if (s.includes('AGGRESSIVE')) return 'decision-aggressive';
+        if (s.includes('INCREASE')) return 'decision-increase';
+        if (s.includes('REDUCE') || s.includes('CLEARANCE')) return 'decision-reduce';
+        return 'decision-maintain';
+      };
+
+      const stockColor = r => r === 'HIGH' ? '#C0392B' : r === 'MEDIUM' ? '#C67C3A' : '#5A8A6A';
+      // Safety: score 0 = fully unsafe (all ingredients flagged), 100 = perfectly safe
+      // A score of 0 with harmful ingredients = RED/Unsafe
+      const rawScore = (safety.safety_score !== null && safety.safety_score !== undefined) ? safety.safety_score : null;
+      const displayScore = rawScore !== null ? Math.round(rawScore) : null;
+      const safetyColor = score => score >= 80 ? '#5A8A6A' : score >= 50 ? '#C67C3A' : '#C0392B';
+      const safetyLabel = () => {
+        if (rawScore === null) return safety.safety_status || 'Not analysed';
+        if (rawScore <= 20) return '⚠️ Unsafe — Remove from sale';
+        if (rawScore <= 50) return '⚠️ Caution — Review ingredients';
+        if (rawScore <= 80) return '✓ Moderate — Monitor closely';
+        return '✅ Safe';
+      };
+
+      const ratingDist = reviews.rating_distribution || {};
+      const totalRev = reviews.review_count || 0;
+      const ratingBars = [5, 4, 3, 2, 1].map(star => {
+        const cnt = ratingDist[star] || 0;
+        const pct = totalRev ? Math.round(cnt / totalRev * 100) : 0;
+        return `<div class="rating-row">
+      <div class="rating-label">${'⭐'.repeat(star)}</div>
+      <div class="rating-bg"><div class="rating-fill" style="width:${pct}%"></div></div>
+      <div class="rating-count">${pct}%</div>
+    </div>`;
+      }).join('');
+
+      const recentReviews = (reviews.recent || []).length === 0
+        ? `<div class="empty-state"><div class="empty-icon">⭐</div><p><strong>No reviews yet</strong></p><p style="margin-top:6px">Reviews will appear here once customers purchase this product.</p></div>`
+        : (reviews.recent || []).map(r => `
+    <div class="review-item">
+      <div class="review-header">
+        <span class="reviewer-name">${escHtml(r.reviewer_name || 'Anonymous')}${r.is_synthetic ? '<span class="synthetic-badge">Sample</span>' : ''}</span>
+        <span class="review-rating">${'⭐'.repeat(Math.round(r.rating || 0))} ${r.rating ? r.rating.toFixed(1) : ''}</span>
+      </div>
+      <div class="review-body">${escHtml(r.review_body || '')}</div>
+    </div>
+  `).join('');
+
+      const simProducts = similar.length === 0
+        ? `<div class="empty-state"><div class="empty-icon">🔗</div><p><strong>No similar products found</strong></p><p style="margin-top:6px">Add more products to your inventory to see recommendations.</p></div>`
+        : similar.map((s, i) => `
+    <div class="sim-item" onclick="location.href='product_detail.html?product_id=${encodeURIComponent(s.product_id || '')}'">
+      <div class="sim-rank">${i + 1}</div>
+      <div style="flex:1">
+        <div class="sim-name">${escHtml(s.product_name || '')}</div>
+        <div class="sim-brand">${escHtml(s.brand || '')} · ${escHtml(s.category || '')}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.75rem">
+        <div class="sim-price">₹${s.price ? Math.round(s.price).toLocaleString('en-IN') : '—'}</div>
+        ${s.avg_rating ? `<span class="sim-match">⭐${s.avg_rating.toFixed(1)}</span>` : ''}
+      </div>
+    </div>
+  `).join('');
+
+      const skinTags = (skin.skin_type || '').split(',').filter(Boolean).map(t => `<div class="skin-tag">${escHtml(t.trim())}</div>`).join('');
+      const harmfulList = (safety.harmful_ingredients || []).length === 0
+        ? '<div style="padding:1rem;color:var(--muted2);font-size:0.85rem">✅ No harmful ingredients detected.</div>'
+        : (safety.harmful_ingredients || []).map(h => {
+          const r = h.risk_level || 'low';
+          const icon = r === 'high' ? '☠️' : (r === 'medium' ? '⚠️' : 'ℹ️');
+          return `
+            <div class="harmful-item risk-${r}">
+              <div class="harmful-icon icon-${r}">${icon}</div>
+              <div style="flex:1">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <div class="harmful-name">${escHtml(h.name || h.keyword || '')}</div>
+                  <span style="font-size:0.6rem;font-weight:800;text-transform:uppercase;padding:2px 6px;background:rgba(0,0,0,0.05);border-radius:4px">${r} risk</span>
+                </div>
+                <div class="harmful-reason">${escHtml(h.reason || '')}</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+      const safeList = (safety.safe_ingredients || []).map(s => `
+        <div class="safe-ingredient-pill" title="${escHtml(s.reason)}">
+          <span style="color:#5A8A6A">✓</span> ${escHtml(s.name)}
+        </div>
+      `).join('');
+
+      document.getElementById('main-content').innerHTML = `
+    <div class="product-hero">
+      <div>
+        <div class="product-name">${escHtml(p.product_name || '')}</div>
+        <div style="color:var(--muted2);font-size:0.9rem">${escHtml(p.brand || '')} · ${escHtml(p.category || '')}</div>
+        <div class="product-meta">
+          <div class="meta-chip">📦 Stock: ${inv.current_stock || 0} units</div>
+          <div class="meta-chip" style="color:${stockColor(fc.stockout_risk)}">⏱ ${fc.days_until_stockout ? fc.days_until_stockout.toFixed(0) + ' days left' : '—'}</div>
+          <div class="meta-chip">🔖 ${escHtml(d.verification_status || 'unverified')}</div>
+          ${reviews.avg_rating ? `<div class="meta-chip">⭐ ${reviews.avg_rating.toFixed(1)} (${totalRev} reviews)</div>` : ''}
+        </div>
+      </div>
+      <div class="price-badge">₹${p.price ? Math.round(p.price).toLocaleString('en-IN') : '—'}</div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab(0,this)">📦 Stock & Forecast</button>
+      <button class="tab-btn" onclick="switchTab(1,this)">🧴 Skin Analysis</button>
+      <button class="tab-btn" onclick="switchTab(2,this)">⚠️ Safety Check</button>
+      <button class="tab-btn" onclick="switchTab(3,this)">⭐ Reviews</button>
+      <button class="tab-btn" onclick="switchTab(4,this)">💡 Recommendations</button>
+    </div>
+
+    <!-- TAB 0: STOCK -->
+    <div class="tab-panel active" id="tab-0">
+      <div class="section-grid">
+        <div>
+          <div class="section-grid" style="margin-bottom:1rem">
+            <div class="stat-box"><div class="stat-label">Current Stock</div><div class="stat-value">${inv.current_stock || 0}</div><div class="stat-sub">units</div></div>
+            <div class="stat-box"><div class="stat-label">Days Until Stockout</div><div class="stat-value" style="color:${stockColor(fc.stockout_risk)}">${fc.days_until_stockout ? fc.days_until_stockout.toFixed(0) : '—'}</div><div class="stat-sub">Risk: ${fc.stockout_risk || '—'}</div></div>
+          </div>
+          <div class="decision-box ${decisionClass(fc.stock_decision)}">
+            <div class="decision-title">${escHtml(fc.stock_decision || 'MAINTAIN STOCK')}</div>
+            <div class="decision-reason">${escHtml(fc.decision_reason || 'Maintain current stock levels.')}</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header">📈 Sales History &amp; Demand Forecast</div>
+          <div class="chart-container"><canvas id="forecast-chart"></canvas></div>
+          <div class="chart-legend-note">
+            <span><span class="chart-legend-dot" style="background:#A07B6A;display:inline-block;height:3px"></span>Actual Sales (past 12 months)</span>
+            <span><span class="chart-legend-dot" style="background:#5A6E9E;display:inline-block;height:3px;border-top:2px dashed #5A6E9E"></span>AI Forecast (next 8 months)</span>
+            <span style="color:var(--muted)">│ Vertical line = Today</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 1: SKIN -->
+    <div class="tab-panel" id="tab-1">
+      <div class="panel" style="margin-bottom:1rem">
+        <div class="panel-header">Skin Type Suitability</div>
+        ${skin.skin_type ? `
+          <div class="skin-tags">${skinTags || `<div class="skin-tag">${escHtml(skin.skin_type)}</div>`}</div>
+          <div style="padding:0 1.5rem 1.5rem;color:var(--muted2);font-size:0.85rem">
+            Model confidence: <strong style="color:var(--accent2)">${skin.confidence ? Math.round(skin.confidence * 100) + '%' : '—'}</strong>
+          </div>
+        ` : '<div style="padding:1.5rem;color:var(--muted2)">No skin analysis data available.</div>'}
+      </div>
+      ${p.ingredients ? `
+        <div class="panel">
+          <div class="panel-header">Ingredient List</div>
+          <div style="padding:1.5rem;font-size:0.83rem;color:var(--muted2);line-height:1.7">${escHtml(p.ingredients)}</div>
+        </div>
+      ` : ''}
+    </div>
+
+    <!-- TAB 2: SAFETY -->
+    <div class="tab-panel" id="tab-2">
+      <div class="section-grid">
+        <div class="panel">
+          <div class="panel-header">Safety Score</div>
+          <div class="safety-score-ring">
+            <div class="ring-value" style="color:${displayScore !== null ? safetyColor(displayScore) : '#9E9890'}">
+              ${displayScore !== null ? displayScore + '/100' : '—'}
+            </div>
+            <div class="ring-label">${safetyLabel()}</div>
+          </div>
+          <div class="progress-bar-container">
+            <div class="pb-label"><span>Safety Score</span><span>${displayScore !== null ? displayScore + '%' : 'No data'}</span></div>
+            <div class="pb-bg"><div class="pb-fill" style="width:${displayScore !== null ? displayScore : 0}%;background:${displayScore !== null ? safetyColor(displayScore) : '#DDD6CE'}"></div></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header">Safety Analysis</div>
+          <div class="harmful-list">
+            <div style="margin-bottom:1.5rem">
+              <div style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:0.75rem;text-transform:uppercase">Flagged Ingredients (${(safety.harmful_ingredients || []).length})</div>
+              ${harmfulList}
+            </div>
+            <div>
+              <div style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:0.75rem;text-transform:uppercase">Verified Safe (${(safety.safe_ingredients || []).length})</div>
+              <div class="safe-ingredients-grid">
+                ${safeList || '<div style="color:var(--muted2);font-size:0.82rem">No ingredients identified as safe.</div>'}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: REVIEWS -->
+    <div class="tab-panel" id="tab-3">
+      <div class="panel" style="margin-bottom:1rem">
+        <div class="panel-header">Review Summary</div>
+        <div class="sentiment-bars">
+          <div class="sent-item">
+            <div class="sent-pct" style="color:#5A8A6A">${reviews.sentiment ? reviews.sentiment.positive_pct : 0}%</div>
+            <div class="sent-label">Positive</div>
+          </div>
+          <div class="sent-item">
+            <div class="sent-pct" style="color:#9E9890">${reviews.sentiment ? reviews.sentiment.neutral_pct : 0}%</div>
+            <div class="sent-label">Neutral</div>
+          </div>
+          <div class="sent-item">
+            <div class="sent-pct" style="color:#C0392B">${reviews.sentiment ? reviews.sentiment.negative_pct : 0}%</div>
+            <div class="sent-label">Negative</div>
+          </div>
+        </div>
+        <div class="rating-bars">${ratingBars}</div>
+      </div>
+      <div class="panel">
+        <div class="panel-header">Recent Reviews (${totalRev} total)</div>
+        ${recentReviews}
+      </div>
+    </div>
+
+    <!-- TAB 4: RECOMMENDATIONS -->
+    <div class="tab-panel" id="tab-4">
+      <div class="panel">
+        <div class="panel-header">💡 Trending Recommendations</div>
+        <div id="rec-container" style="padding:1.5rem">
+          <div class="loading-state"><div class="loading-spinner"></div><span>Loading recommendations...</span></div>
+        </div>
+      </div>
+    </div>
+  `;
+
+      // ── Chart Data Assembly ──────────────────────────────────────────
+      // API returns: fc.values = number[] (forecast), fc.history = number[] (past)
+      // d.sales_history = [{year, month, units_sold}] (real DB rows)
+      const fcVals = fc.values || fc.forecast || [];        // forecast numbers
+      const fcHist = fc.history || [];                        // plain monthly numbers array
+      const salesHist = d.sales_history || [];                 // [{year,month,units_sold}]
+      const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const now = new Date();
+
+      // Build a {"YYYY-MM": value} lookup from the object array (real sales)
+      const salesMap = {};
+      salesHist.forEach(s => {
+        if (s && s.year && s.month && s.units_sold != null) {
+          salesMap[`${s.year}-${String(s.month).padStart(2, '0')}`] = Math.round(s.units_sold);
+        }
+      });
+
+      // Last 12 months of actual sales (show more history for better context)
+      const histLabels = [], histData = [];
+      for (let i = 11; i >= 0; i--) {
+        const dt = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
+        histLabels.push(MONTHS[dt.getMonth()] + " '" + String(dt.getFullYear()).slice(2));
+        // Priority: real sales DB row > plain history array (most recent = index 0 from right)
+        const dbVal = salesMap[key];
+        const arrVal = fcHist.length > 0 ? fcHist[fcHist.length - 1 - i] : null;
+        histData.push(dbVal != null ? dbVal : (arrVal != null ? Math.round(arrVal) : null));
+      }
+
+      // Next 8 months AI forecast
+      const fcLabels = [], fcData = [];
+      for (let i = 1; i <= 8; i++) {
+        const dt = new Date(now.getFullYear(), now.getMonth() + i, 1);
+        fcLabels.push(MONTHS[dt.getMonth()] + " '" + String(dt.getFullYear()).slice(2));
+        fcData.push(fcVals[i - 1] != null ? Math.round(fcVals[i - 1]) : null);
+      }
+
+      // Merge into one 20-point timeline (12 history + 8 forecast)
+      const allLabels = [...histLabels, ...fcLabels];
+      const histDataset = [...histData, ...Array(8).fill(null)];
+      // Connect history and forecast at the seam (last real value repeated as forecast[0])
+      const lastHistVal = histData.filter(v => v != null).slice(-1)[0] || null;
+      const fcDataset = [...Array(11).fill(null), lastHistVal, ...fcData];
+
+      if (document.getElementById('forecast-chart')) {
+        const ctx = document.getElementById('forecast-chart').getContext('2d');
+
+        const gradientHist = ctx.createLinearGradient(0, 0, 0, 300);
+        gradientHist.addColorStop(0, 'rgba(160, 123, 106, 0.25)');
+        gradientHist.addColorStop(1, 'rgba(160, 123, 106, 0.01)');
+
+        const gradientFc = ctx.createLinearGradient(0, 0, 0, 300);
+        gradientFc.addColorStop(0, 'rgba(90, 110, 158, 0.15)');
+        gradientFc.addColorStop(1, 'rgba(90, 110, 158, 0.01)');
+
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: allLabels,
+            datasets: [
+              {
+                label: 'Sales History',
+                data: histDataset,
+                borderColor: '#A07B6A',
+                backgroundColor: gradientHist,
+                borderWidth: 4,
+                tension: 0.4,
+                pointRadius: (ctx) => ctx.dataIndex === 5 ? 6 : 4,
+                pointBackgroundColor: '#A07B6A',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                fill: true,
+              },
+              {
+                label: 'AI Demand Forecast',
+                data: fcDataset,
+                borderColor: '#5A6E9E',
+                borderDash: [8, 5],
+                backgroundColor: gradientFc,
+                borderWidth: 4,
+                tension: 0.4,
+                pointRadius: 4,
+                pointBackgroundColor: '#5A6E9E',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                fill: true,
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: 'rgba(255, 255, 255, 0.98)',
+                titleColor: '#2C2C2C',
+                bodyColor: '#6B6560',
+                borderColor: '#EDE8E3',
+                borderWidth: 1,
+                padding: 12,
+                boxPadding: 6,
+                usePointStyle: true,
+                callbacks: {
+                  label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()} units`
+                }
+              }
+            },
+            scales: {
+              x: {
+                ticks: { color: '#9E9890', font: { size: 10, weight: '600' } },
+                grid: { display: false }
+              },
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  color: '#9E9890',
+                  font: { size: 10, weight: '600' },
+                  maxTicksLimit: 6,
+                  callback: v => {
+                    if (v === 0) return '0';
+                    if (v >= 1000) return (v / 1000).toFixed(1) + 'k u';
+                    return Number.isInteger(v) ? v.toLocaleString() + ' u' : '';
+                  }
+                },
+                grid: { color: 'rgba(0,0,0,0.03)', drawBorder: false }
+              }
+            }
+          },
+          plugins: [{
+            id: 'todayLine',
+            beforeDraw(chart) {
+              const { ctx, chartArea: { top, bottom, right }, scales: { x } } = chart;
+              // TODAY is between index 11 (last history) and 12 (first forecast)
+              const xPos = (x.getPixelForValue(11) + x.getPixelForValue(12)) / 2;
+
+              ctx.save();
+              ctx.fillStyle = 'rgba(0, 0, 0, 0.02)';
+              ctx.fillRect(xPos, top, right - xPos, bottom - top);
+
+              ctx.strokeStyle = 'rgba(160, 123, 106, 0.3)';
+              ctx.setLineDash([5, 5]);
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.moveTo(xPos, top);
+              ctx.lineTo(xPos, bottom);
+              ctx.stroke();
+
+              ctx.fillStyle = '#A07B6A';
+              ctx.font = 'bold 10px Inter';
+              ctx.textAlign = 'center';
+              ctx.fillText('TODAY', xPos, top - 10);
+              ctx.restore();
+            }
+          }]
+        });
+      }
+
+      // Recommendations are now started in parallel in loadProduct
+    }
+
+    async function renderRecommendations(data) {
+      const container = document.getElementById('rec-container');
+      if (!container) return;
+      try {
+        const recs = data.recommendations || [];
+
+        if (!recs.length) {
+          container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">💡</div>
+          <p><strong>No recommendations yet</strong></p>
+          <p style="margin-top:6px">Recommendations appear after the AI pipeline has analyzed sales trends across your inventory.</p>
+        </div>`;
+          return;
+        }
+
+        const trendCount = recs.filter(r => r.is_trending).length;
+        container.innerHTML = `
+      <p style="font-size:0.82rem;color:var(--muted2);margin-bottom:1rem">
+        Based on sales velocity, ratings, safety scores, and demand trends across your inventory.
+        ${trendCount > 0 ? `<strong style="color:#5A8A6A">${trendCount} trending</strong> included.` : ''}
+      </p>
+      ${recs.map((rec, idx) => `
+        <div class="rec-card ${rec.is_confident ? 'rec-confident' : (rec.is_trending ? 'rec-trending' : '')}">
+          ${rec.is_confident ? '<div class="confident-badge">✨ Confident Choice</div>' : (rec.is_trending ? '<div class="trending-badge">📈 Trending</div>' : '')}
+          <div class="rec-rank">#${idx + 1} Recommendation</div>
+          <div class="rec-name">${escHtml(rec.product_name)}</div>
+          <div class="rec-brand">${escHtml(rec.brand)}</div>
+          <div class="rec-meta">
+            <span class="rec-tag">${escHtml(rec.category)}</span>
+            <span class="rec-tag">₹${rec.price ? Math.round(rec.price).toLocaleString('en-IN') : '—'}</span>
+            ${rec.avg_rating ? `<span class="rec-tag">⭐ ${rec.avg_rating}</span>` : ''}
+            <span class="rec-tag">${rec.safety_status || 'Safe'}</span>
+          </div>
+          <div class="rec-why">
+            <div class="rec-why-title">Why recommended:</div>
+            <ul class="rec-reasons">
+              ${(rec.recommendation_reasons || []).map(r => `<li>${escHtml(r)}</li>`).join('')}
+            </ul>
+          </div>
+          ${rec.why_better_than_current && rec.why_better_than_current.length ? `
+          <div class="rec-better">
+            <div class="rec-better-title">Better than current product:</div>
+            ${rec.why_better_than_current.map(w => `<div class="rec-better-item">→ ${escHtml(w)}</div>`).join('')}
+          </div>` : ''}
+          <div class="rec-stats">
+            <div><span class="rec-stat-label">Avg Sales</span><span class="rec-stat-value">${rec.avg_monthly_sales || 0}/mo</span></div>
+            <div><span class="rec-stat-label">Trend</span>
+              <span class="rec-stat-value ${rec.forecast_trend}">
+                ${rec.forecast_trend === 'increasing' ? '↑ Rising' : rec.forecast_trend === 'decreasing' ? '↓ Falling' : '→ Stable'}
+              </span></div>
+            <div><span class="rec-stat-label">Stock</span><span class="rec-stat-value">${rec.stock_status || 'normal'}</span></div>
+          </div>
+          <button class="btn-view-rec" onclick="location.href='product_detail.html?product_id=${encodeURIComponent(rec.product_id)}'">
+            View Details →
+          </button>
+        </div>
+      `).join('')}`;
+      } catch (err) {
+        if (container) container.innerHTML = `<div class="empty-state"><p>Failed to load recommendations: ${escHtml(err.message)}</p></div>`;
+      }
+    }
+
+    function switchTab(idx, btn) {
+      document.querySelectorAll('.tab-panel').forEach((p, i) => p.classList.toggle('active', i === idx));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    loadProduct();
+  </script>
+</body>
+
+</html>

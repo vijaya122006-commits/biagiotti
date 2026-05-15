@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Similarity Search — Biagiotti</title>
+    <link rel="stylesheet" href="assets/theme.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* ── Spinner ─────────────────────────────────────── */
+        .spinner {
+            display: inline-block; width: 14px; height: 14px;
+            border: 2px solid rgba(255,255,255,.45); border-top-color: #fff;
+            border-radius: 50%; animation: _spin .7s linear infinite;
+            vertical-align: middle; margin-right: 5px;
+        }
+        @keyframes _spin { to { transform: rotate(360deg); } }
+
+        /* ── Card entrance ───────────────────────────────── */
+        .card-slide-in { animation: _slideUp .32s ease both; }
+        @keyframes _slideUp {
+            from { opacity: 0; transform: translateY(14px); }
+            to   { opacity: 1; transform: none; }
+        }
+
+        /* ── Status banner ───────────────────────────────── */
+        .status-banner {
+            display: flex; align-items: flex-start; gap: 1rem;
+            background: #fdf2f4; border-left: 4px solid var(--primary);
+            border-radius: 8px; padding: .9rem 1.25rem; margin-bottom: 1.75rem;
+        }
+        .status-banner.safe-mode   { border-color: #1e8449; background: #e8f8ef; }
+        .status-banner.unsafe-mode { border-color: #c0392b; background: #fdecea; }
+        .status-banner.warn-mode   { border-color: #d68910; background: #fff8e1; }
+        .sb-icon { font-size: 1.25rem; margin-top: .05rem; flex-shrink: 0; }
+
+        /* ── Safety badges ───────────────────────────────── */
+        .badge-safe-product {
+            display: inline-flex; align-items: center; gap: .3rem;
+            background: #e8f8ef; color: #1e8449; border: 1px solid #1e8449;
+            border-radius: 20px; font-size: .72rem; font-weight: 700;
+            padding: .18rem .65rem;
+        }
+        .badge-unsafe-product {
+            display: inline-flex; align-items: center; gap: .3rem;
+            background: #fdecea; color: #c0392b; border: 1px solid #c0392b;
+            border-radius: 20px; font-size: .72rem; font-weight: 700;
+            padding: .18rem .65rem;
+        }
+
+        /* ── Match score ─────────────────────────────────── */
+        .sim-pct {
+            font-size: 2rem; font-weight: 800; line-height: 1; margin-bottom: .15rem;
+        }
+
+        /* ── Harmful pills ───────────────────────────────── */
+        .harmful-pill {
+            display: inline-block; background: #fdecea; color: #a93226;
+            border-radius: 4px; font-size: .67rem; font-weight: 600;
+            padding: .12rem .45rem; margin: .1rem;
+        }
+
+        /* ── Category pill ───────────────────────────────── */
+        .cat-pill {
+            display: inline-block; background: var(--primary-light);
+            color: var(--primary); border: 1px solid var(--primary);
+            border-radius: 20px; font-size: .67rem; padding: .1rem .5rem;
+            font-weight: 600; margin-left: .3rem;
+        }
+
+        /* ── Autocomplete dropdown ───────────────────────── */
+        .ac-wrap { position: relative; flex: 1; }
+        .ac-list {
+            position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+            background: #fff; border: 1.5px solid var(--primary-light);
+            border-radius: 10px; box-shadow: 0 8px 24px rgba(183,110,121,.18);
+            max-height: 260px; overflow-y: auto; z-index: 500;
+            display: none;
+        }
+        .ac-list.open { display: block; }
+        .ac-item {
+            padding: .65rem 1rem; cursor: pointer;
+            border-bottom: 1px solid #f8f0f2; transition: background .15s;
+        }
+        .ac-item:last-child { border-bottom: none; }
+        .ac-item:hover, .ac-item.active { background: var(--primary-light); }
+        .ac-name { font-size: .9rem; font-weight: 500; color: var(--text-dark); }
+        .ac-meta { font-size: .75rem; color: var(--text-muted); margin-top: 1px; }
+        .ac-ing  { font-size: .72rem; color: #a86070; margin-top: 1px;
+                   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* ── Ingredient strip ────────────────────────────── */
+        .ing-strip {
+            display: none; background: #f9f2f4; border: 1px solid var(--primary-light);
+            border-radius: 8px; padding: .65rem 1rem; font-size: .8rem;
+            color: var(--text-muted); margin-top: .65rem; line-height: 1.55;
+        }
+        .ing-strip.show { display: block; }
+        .ing-val { color: var(--text-dark); font-weight: 500; }
+
+        /* ── Result grid ─────────────────────────────────── */
+        #simGrid { min-height: 80px; }
+        .result-card {
+            position: relative; text-align: center;
+            display: flex; flex-direction: column; gap: .4rem;
+            height: 100%;
+        }
+        .result-card-inner {
+            flex: 1; display: flex; flex-direction: column; gap: .4rem;
+        }
+        .card.safe-card   { border-top: 3px solid #1e8449; }
+        .card.unsafe-card { border-top: 3px solid #c0392b; }
+    </style>
+</head>
+
+<body>
+<nav class="navbar">
+    <div class="container nav-container">
+        <a href="dashboard.html" class="brand-logo">
+            <i class="fa-solid fa-leaf"></i> Biagiotti
+        </a>
+        <ul class="nav-links">
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="database_connection.html">Live Sync</a></li>
+            <li><a href="upload.html">Upload Data</a></li>
+            <li><a href="safety.html">Ingredient Safety</a></li>
+            <li><a href="similarity.html" class="active">Similarity Search</a></li>
+            <li><a href="skin.html">Skin-Type Analysis</a></li>
+            <li><a href="forecast.html">Forecasting</a></li>
+            <li><a href="reports.html">Reports</a></li>
+            <li><a href="login.html" style="color:var(--danger);">
+                <i class="fa-solid fa-sign-out-alt"></i> Logout
+            </a></li>
+        </ul>
+    </div>
+</nav>
+
+<div class="page-wrapper fade-in">
+    <div class="container">
+        <div id="pipelineBannerContainer"></div>
+
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Similarity &amp; Alternatives</h1>
+                <p class="page-subtitle">
+                    Find ingredient-similar products using TF-IDF cosine matching. Unsafe products automatically show safe alternatives.
+                </p>
+            </div>
+        </div>
+
+        <!-- ── Search Card ──────────────────────────────────── -->
+        <div class="card fade-in delay-1" style="max-width:860px;margin:0 auto 2rem;">
+
+            <!-- Product search with autocomplete -->
+            <div style="display:flex;gap:.75rem;margin-bottom:.75rem;align-items:flex-start;">
+                <div class="ac-wrap">
+                    <input id="simInput" type="text" class="form-control"
+                           placeholder="Type a product name to search…"
+                           autocomplete="off" aria-label="Product search">
+                    <div class="ac-list" id="acList"></div>
+                </div>
+                <button id="simBtn" class="btn btn-primary" style="white-space:nowrap;flex-shrink:0;">
+                    <i class="fa-solid fa-magnifying-glass"></i> Find Similar
+                </button>
+            </div>
+
+            <!-- Ingredient pill (shown when product is selected) -->
+            <div class="ing-strip" id="ingStrip">
+                <i class="fa-solid fa-flask" style="color:var(--primary);margin-right:.4rem;"></i>
+                <strong>Loaded ingredients:</strong>
+                <span class="ing-val" id="ingPreview"></span>
+                <span id="ingClear" style="float:right;cursor:pointer;color:var(--primary);font-size:.8rem;" onclick="clearSelection()">
+                    <i class="fa-solid fa-xmark"></i> Clear
+                </span>
+            </div>
+
+            <!-- Controls row -->
+            <div style="display:flex;gap:1.25rem;align-items:center;flex-wrap:wrap;margin-top:.8rem;">
+                <label class="form-label" style="font-size:.82rem;margin:0;display:flex;align-items:center;gap:.4rem;">
+                    Top&nbsp;N:&nbsp;
+                    <input id="simTopN" type="number" min="1" max="12" value="6"
+                           class="form-control" style="width:64px;padding:.3rem .5rem;font-size:.82rem;display:inline;">
+                </label>
+                <label style="font-size:.82rem;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;gap:.4rem;">
+                    <input id="simSafeOnly" type="checkbox"> Show only safe alternatives
+                </label>
+                <label style="font-size:.82rem;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;gap:.4rem;">
+                    <input id="simByIndex" type="checkbox"> Search by integer index
+                </label>
+            </div>
+        </div>
+
+        <!-- ── Status Banner ────────────────────────────────── -->
+        <div id="simStatusBanner" style="max-width:860px;margin:0 auto;display:none;"></div>
+
+        <!-- ── Results Grid ─────────────────────────────────── -->
+        <div id="simGrid" class="row">
+            <div class="col-12" style="text-align:center;padding:3.5rem;color:var(--text-muted);">
+                <i class="fa-solid fa-magnifying-glass"
+                   style="font-size:2.5rem;opacity:.2;display:block;margin-bottom:1rem;"></i>
+                Type a product name above and press <strong>Find Similar</strong>.
+            </div>
+        </div>
+
+        <!-- ── Pipeline Actions ──────────────────────────────── -->
+        <div id="simActions" style="display:none;text-align:center;margin-top:2rem;">
+            <button id="simReportsBtn" class="btn btn-outline">
+                <i class="fa-solid fa-file-lines"></i> View Full Report
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="assets/pipeline.js"></script>
+<script src="assets/api.js"></script>
+<script src="assets/script.js"></script>
+<script src="assets/app.js"></script>
+<script>
+(function () {
+    'use strict';
+
+    /* ── DOM refs ──────────────────────────────────────────────── */
+    var btn       = document.getElementById('simBtn');
+    var input     = document.getElementById('simInput');
+    var acList    = document.getElementById('acList');
+    var ingStrip  = document.getElementById('ingStrip');
+    var ingPrev   = document.getElementById('ingPreview');
+    var topNEl    = document.getElementById('simTopN');
+    var byIdx     = document.getElementById('simByIndex');
+    var safeOnly  = document.getElementById('simSafeOnly');
+    var grid      = document.getElementById('simGrid');
+    var banner    = document.getElementById('simStatusBanner');
+    var actionsEl = document.getElementById('simActions');
+
+    /* ── State ─────────────────────────────────────────────────── */
+    var selectedProduct = null;   // { product_id, product_name, ingredients, brand }
+    var acDebounce      = null;
+    var acActiveIdx     = -1;
+
+    /* ── Init pipeline banner ───────────────────────────────────── */
+    Pipeline.renderBanner('pipelineBannerContainer');
+
+    /* ── Pre-fill from pipeline context ───────────────────────── */
+    (function prefill() {
+        var pctx = Pipeline.getProduct();
+        var preQ = Pipeline.getSearchQuery ? Pipeline.getSearchQuery() : null;
+        var name = preQ || (pctx && pctx.product_name) || '';
+        if (name) {
+            input.value = name;
+            // Try to auto-resolve product and run
+            resolveByName(name, function() {
+                setTimeout(function() { btn.click(); }, 350);
+            });
+        }
+    })();
+
+    /* ── HTML utilities ─────────────────────────────────────────── */
+    function esc(s) {
+        return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+    function escAttr(s) {
+        return String(s || '').replace(/'/g,"\\'").replace(/\n/g,' ').slice(0, 300);
+    }
+    function scoreColor(sim) {
+        if (sim >= 0.65) return 'var(--safe, #1e8449)';
+        if (sim >= 0.3)  return 'var(--warning, #d68910)';
+        return 'var(--text-muted, #888)';
+    }
+
+    /* ── Status Banner ─────────────────────────────────────────── */
+    function showBanner(type, icon, title, body) {
+        banner.innerHTML =
+            '<div class="status-banner ' + type + '">' +
+              '<div class="sb-icon"><i class="fa-solid ' + icon + '"></i></div>' +
+              '<div>' +
+                '<strong style="display:block;margin-bottom:.2rem;">' + title + '</strong>' +
+                '<span style="font-size:.86rem;opacity:.85;">' + body + '</span>' +
+              '</div>' +
+            '</div>';
+        banner.style.display = 'block';
+    }
+    function hideBanner() { banner.style.display = 'none'; }
+
+    /* ── Grid helpers ───────────────────────────────────────────── */
+    function setGrid(html) { grid.innerHTML = html; }
+
+    function showLoading() {
+        setGrid(
+            '<div class="col-12" style="text-align:center;padding:2.5rem;">' +
+            '<i class="fa-solid fa-spinner fa-spin" style="font-size:1.8rem;color:var(--primary);display:block;margin-bottom:.75rem;"></i>' +
+            '<span style="color:var(--text-muted);">Finding similar products…</span>' +
+            '</div>'
+        );
+        actionsEl.style.display = 'none';
+    }
+
+    function showEmpty(icon, title, subtitle, link, linkLabel) {
+        setGrid(
+            '<div class="col-12" style="text-align:center;padding:2.5rem;">' +
+            '<i class="fa-solid ' + icon + '" style="font-size:2.2rem;margin-bottom:.9rem;display:block;opacity:.45;"></i>' +
+            '<strong style="font-size:1rem;">' + title + '</strong><br>' +
+            (subtitle ? '<span style="color:var(--text-muted);font-size:.88rem;display:block;margin-top:.4rem;">' + subtitle + '</span>' : '') +
+            (link     ? '<a href="' + link + '" class="btn btn-outline" style="margin-top:1.1rem;">' + linkLabel + '</a>' : '') +
+            '</div>'
+        );
+    }
+
+    /* ── Ingredient strip ───────────────────────────────────────── */
+    function showIngredients(product) {
+        if (product && product.ingredients && product.ingredients.trim()) {
+            var short = product.ingredients.length > 120
+                ? product.ingredients.slice(0, 120) + '…'
+                : product.ingredients;
+            ingPrev.textContent = short;
+            ingStrip.classList.add('show');
+        } else {
+            ingStrip.classList.remove('show');
+        }
+    }
+
+    window.clearSelection = function() {
+        selectedProduct = null;
+        ingStrip.classList.remove('show');
+        input.value = '';
+        input.focus();
+    };
+
+    /* ── Autocomplete ───────────────────────────────────────────── */
+    function resolveByName(name, cb) {
+        fetch('' + ((window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') ? window.location.origin : 'http://localhost:5050') + '/api/products/search?q=' + encodeURIComponent(name) + '&limit=1')
+            .then(function(r) { return r.json(); })
+            .then(function(j) {
+                var items = j.data || [];
+                if (items.length && items[0].product_name.toLowerCase() === name.toLowerCase()) {
+                    selectedProduct = items[0];
+                    showIngredients(selectedProduct);
+                } else if (items.length) {
+                    selectedProduct = items[0];
+                    showIngredients(selectedProduct);
+                }
+                if (cb) cb();
+            })
+            .catch(function() { if (cb) cb(); });
+    }
+
+    function fetchAC(q) {
+        fetch('' + ((window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') ? window.location.origin : 'http://localhost:5050') + '/api/products/search?q=' + encodeURIComponent(q) + '&limit=8')
+            .then(function(r) { return r.json(); })
+            .then(function(j) { renderAC(j.data || [], q); })
+            .catch(function() { closeAC(); });
+    }
+
+    function renderAC(items, q) {
+        if (!items.length) { closeAC(); return; }
+        acActiveIdx = -1;
+        acList.innerHTML = items.map(function(p, i) {
+            var ingShort = p.ingredients
+                ? p.ingredients.slice(0, 60) + (p.ingredients.length > 60 ? '…' : '')
+                : 'No ingredients on file';
+            return '<div class="ac-item" data-idx="' + i + '" onmousedown="selectAC(event,' + i + ')">' +
+                '<div class="ac-name">' + esc(p.product_name) + '</div>' +
+                '<div class="ac-meta">' + esc(p.brand || '—') + (p.price ? ' &nbsp;·&nbsp; $' + parseFloat(p.price).toFixed(2) : '') + '</div>' +
+                '<div class="ac-ing"><i class="fa-solid fa-flask" style="font-size:.6rem;opacity:.6;"></i> ' + esc(ingShort) + '</div>' +
+            '</div>';
+        }).join('');
+        acList._items = items;
+        acList.classList.add('open');
+    }
+
+    function closeAC() {
+        acList.classList.remove('open');
+        acList.innerHTML = '';
+        acList._items = [];
+        acActiveIdx = -1;
+    }
+
+    window.selectAC = function(e, idx) {
+        e.preventDefault();
+        var items = acList._items || [];
+        if (!items[idx]) return;
+        selectedProduct = items[idx];
+        input.value = selectedProduct.product_name;
+        showIngredients(selectedProduct);
+        closeAC();
+    };
+
+    /* keyboard nav */
+    input.addEventListener('keydown', function(e) {
+        var items = acList.querySelectorAll('.ac-item');
+        if (!items.length) return;
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            acActiveIdx = Math.min(acActiveIdx + 1, items.length - 1);
+            items.forEach(function(el, i) { el.classList.toggle('active', i === acActiveIdx); });
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            acActiveIdx = Math.max(acActiveIdx - 1, 0);
+            items.forEach(function(el, i) { el.classList.toggle('active', i === acActiveIdx); });
+        } else if (e.key === 'Enter') {
+            if (acActiveIdx >= 0 && acList._items && acList._items[acActiveIdx]) {
+                selectedProduct = acList._items[acActiveIdx];
+                input.value = selectedProduct.product_name;
+                showIngredients(selectedProduct);
+                closeAC();
+                e.preventDefault();
+            }
+        } else if (e.key === 'Escape') {
+            closeAC();
+        }
+    });
+
+    input.addEventListener('input', function() {
+        var q = this.value.trim();
+        selectedProduct = null;
+        ingStrip.classList.remove('show');
+        clearTimeout(acDebounce);
+        if (q.length < 2) { closeAC(); return; }
+        acDebounce = setTimeout(function() { fetchAC(q); }, 230);
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.ac-wrap')) closeAC();
+    });
+
+    /* ── Render result cards ────────────────────────────────────── */
+    function renderCards(results, mode, queryCat) {
+        if (!results || !results.length) {
+            if (mode === 'no_safe_alternatives') {
+                showEmpty('shield-halved',
+                    'No safe alternatives found' + (queryCat && queryCat !== 'general' ? ' in the ' + queryCat + ' category' : '') + '.',
+                    'All ingredient-similar products contain harmful ingredients. Try another product.',
+                    null, null);
+            } else {
+                showEmpty('circle-question',
+                    'No similar products found.',
+                    'Try a different product name or check your backend data.',
+                    null, null);
+            }
+            return;
+        }
+
+        setGrid('');
+        results.forEach(function(p, i) {
+            var simPct    = Math.round((p.similarity || 0) * 100);
+            var isSafe    = p.is_safe !== false;   // default safe if field missing
+            var safeHTML  = isSafe
+                ? '<span class="badge-safe-product"><i class="fa-solid fa-shield-check"></i> SAFE</span>'
+                : '<span class="badge-unsafe-product"><i class="fa-solid fa-triangle-exclamation"></i> UNSAFE</span>';
+            var catHTML   = (p.category && p.category !== 'general')
+                ? '<span class="cat-pill">' + esc(p.category) + '</span>' : '';
+            var flagsHTML = '';
+            if (!isSafe && p.harmful_flags && p.harmful_flags.length) {
+                flagsHTML = '<div style="margin:.45rem 0;text-align:left;">' +
+                    p.harmful_flags.slice(0, 4).map(function(f) {
+                        return '<span class="harmful-pill">' + esc(f) + '</span>';
+                    }).join('') + '</div>';
+            }
+
+            var col = document.createElement('div');
+            col.className = 'col-md-4';
+            col.style.animationDelay = (i * 0.05) + 's';
+            col.innerHTML =
+                '<div class="card card-slide-in ' + (isSafe ? 'safe-card' : 'unsafe-card') + '" style="height:100%;">' +
+                    '<span class="badge badge-primary" style="position:absolute;top:.9rem;right:.9rem;">#' + (p.rank || i+1) + '</span>' +
+
+                    '<div style="margin-top:1.2rem;margin-bottom:.5rem;">' +
+                        '<div class="sim-pct" style="color:' + scoreColor(p.similarity || 0) + ';">' + simPct + '%</div>' +
+                        '<div style="font-size:.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;">Match</div>' +
+                    '</div>' +
+
+                    '<h3 style="font-size:.95rem;margin-bottom:.25rem;line-height:1.3;">' + esc(p.product_name) + '</h3>' +
+                    '<p style="font-size:.75rem;color:var(--text-muted);margin-bottom:.4rem;">' + esc(p.product_id) + '</p>' +
+
+                    '<div style="margin-bottom:.4rem;">' + safeHTML + catHTML + '</div>' +
+
+                    flagsHTML +
+
+                    (p.ingredients_preview
+                        ? '<p style="font-size:.72rem;color:var(--text-muted);line-height:1.5;margin:0 0 .6rem;text-align:left;">' +
+                          '<i class="fa-solid fa-flask" style="opacity:.5;font-size:.65rem;"></i> ' +
+                          esc(p.ingredients_preview.slice(0, 80)) + (p.ingredients_preview.length > 80 ? '…' : '') +
+                          '</p>'
+                        : '') +
+
+                    '<div style="display:flex;flex-direction:column;gap:.4rem;margin-top:auto;">' +
+                        '<button class="btn btn-outline" style="font-size:.8rem;" ' +
+                                'onclick="_simSafety(\'' + escAttr(p.product_id) + '\',\'' + escAttr(p.product_name) + '\',\'' + escAttr(p.ingredients_preview || '') + '\')">' +
+                            '<i class="fa-solid fa-flask"></i> Check Safety' +
+                        '</button>' +
+                        '<button class="btn btn-primary" style="font-size:.8rem;" ' +
+                                'onclick="_simForecast(\'' + escAttr(p.product_id) + '\',\'' + escAttr(p.product_name) + '\')">' +
+                            '<i class="fa-solid fa-chart-line"></i> Forecast →' +
+                        '</button>' +
+                    '</div>' +
+                '</div>';
+            grid.appendChild(col);
+        });
+
+        actionsEl.style.display = 'block';
+    }
+
+    /* ── Card pipeline actions ─────────────────────────────────── */
+    window._simSafety = async function(id, name, ingPreview) {
+        var ing = ingPreview || '';
+        try {
+            var res  = await fetch('' + ((window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') ? window.location.origin : 'http://localhost:5050') + '/api/pipeline/product/' + encodeURIComponent(id));
+            var json = await res.json();
+            if (json.status === 'success' && json.data && json.data.ingredients) {
+                ing = json.data.ingredients;
+            }
+        } catch(e) { /* fall back to preview */ }
+        Pipeline.setProduct(id, name, ing);
+        Pipeline.toast('Opening safety analysis for ' + name, 'success');
+        setTimeout(function() { Pipeline.goTo('safety.html'); }, 500);
+    };
+
+    window._simForecast = function(id, name) {
+        Pipeline.setProduct(id, name, '');
+        Pipeline.toast('Opening forecast for ' + name, 'success');
+        setTimeout(function() { Pipeline.goTo('forecast.html'); }, 500);
+    };
+
+    document.getElementById('simReportsBtn').addEventListener('click', function() {
+        Pipeline.goTo('reports.html');
+    });
+
+    /* ── Main Search ───────────────────────────────────────────── */
+    btn.addEventListener('click', async function() {
+        var query   = input.value.trim();
+        var topN    = parseInt(topNEl.value, 10) || 6;
+        var byIndex = byIdx.checked;
+        var onlySafe = safeOnly.checked;
+
+        if (!query) { Pipeline.toast('Please enter a product name.', 'warning'); input.focus(); return; }
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span>Searching…';
+        hideBanner();
+        showLoading();
+
+        try {
+            var payload, usedMethod;
+
+            /* ── Path A: by integer index ──────────────────── */
+            if (byIndex) {
+                var raw = await API.getSimilarProducts(parseInt(query, 10), topN);
+                payload    = raw;
+                usedMethod = 'index';
+                if (!payload.mode)                        payload.mode = 'normal';
+                if (payload.original_is_unsafe === undefined) payload.original_is_unsafe = false;
+
+            /* ── Path B: smart similarity (main path) ──────── */
+            } else {
+                /* Step 1: resolve product + ingredients if not already selected */
+                if (!selectedProduct || selectedProduct.product_name.toLowerCase() !== query.toLowerCase()) {
+                    await new Promise(function(resolve) { resolveByName(query, resolve); });
+                }
+
+                var productId   = (selectedProduct && selectedProduct.product_id)   || '';
+                var ingredients = (selectedProduct && selectedProduct.ingredients)   || '';
+
+                var res = await fetch('' + ((window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') ? window.location.origin : 'http://localhost:5050') + '/api/pipeline/smart-similarity', {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        product_name: query,
+                        product_id:   productId,
+                        ingredients:  ingredients,
+                        top_n:        topN,
+                    }),
+                });
+                var json = await res.json();
+
+                if (!res.ok || json.status !== 'success') {
+                    throw new Error(json.message || ('HTTP ' + res.status));
+                }
+                payload    = json.data;
+                usedMethod = payload._method || 'smart';
+
+                /* if mode is still no_ingredients but we have ing data, retry with /similar-by-ingredients */
+                if (payload.mode === 'no_ingredients' && ingredients) {
+                    var res2 = await fetch('' + ((window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') ? window.location.origin : 'http://localhost:5050') + '/api/pipeline/similar-by-ingredients', {
+                        method:  'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            product_name: query,
+                            ingredients:  ingredients,
+                            top_n:        topN,
+                        }),
+                    });
+                    var json2 = await res2.json();
+                    if (res2.ok && json2.status === 'success') {
+                        payload    = json2.data;
+                        usedMethod = 'ingredient_tfidf_fallback';
+                    }
+                }
+
+                /* client-side safe filter */
+                if (onlySafe && payload.results) {
+                    payload.results = payload.results.filter(function(r) { return r.is_safe !== false; });
+                    payload.mode    = 'safe_filtered';
+                }
+            }
+
+            var mode       = payload.mode        || 'normal';
+            var isUnsafe   = payload.original_is_unsafe || false;
+            var results    = payload.results      || [];
+            var isFallback = usedMethod && usedMethod.includes('fallback');
+            var queryCat   = payload.query_category || '';
+            var catFiltered = payload.category_filtered || false;
+            var catLabel   = (queryCat && queryCat !== 'general')
+                ? queryCat.charAt(0).toUpperCase() + queryCat.slice(1) : '';
+
+            /* ── Status banner ───────────────────────────── */
+            if (mode === 'no_ingredients') {
+                showBanner('warn-mode', 'circle-exclamation',
+                    'No ingredient data found for "' + esc(query) + '".',
+                    'This product has no ingredient record in the database. Try searching for a different product name.');
+                showEmpty('flask', 'No ingredients found.',
+                    'Try a product name from the dashboard product list.',
+                    'safety.html', '<i class="fa-solid fa-flask"></i> Go to Ingredient Safety');
+
+            } else if (mode === 'no_safe_alternatives') {
+                showBanner('unsafe-mode', 'shield-halved',
+                    'No safe alternatives found' + (catLabel ? ' in the ' + catLabel + ' category' : '') + '.',
+                    'All similar products also contain harmful ingredients. Try a different product.');
+                renderCards(results, mode, queryCat);
+
+            } else if (mode === 'safe_filtered') {
+                var catNote = catFiltered && catLabel
+                    ? 'Showing safe <strong>' + catLabel + '</strong> alternatives for "' + esc(query) + '"'
+                    : 'Showing safe alternatives for "' + esc(query) + '"';
+                var subNote = isFallback
+                    ? 'Ingredient-based matching (TF-IDF). Harmful ingredients filtered out.'
+                    : catFiltered
+                        ? 'Only safe ' + catLabel + ' products shown.'
+                        : 'Harmful ingredients filtered out.';
+                showBanner('safe-mode', 'shield-check', catNote, subNote);
+                renderCards(results, mode, queryCat);
+
+            } else {
+                var bodyTxt = results.length + ' similar product' + (results.length !== 1 ? 's' : '') + ' found.';
+                if (isFallback) bodyTxt += ' Ingredient-based TF-IDF matching used.';
+                if (catLabel)   bodyTxt += ' Category: ' + catLabel + '.';
+                showBanner('', 'circle-check', '"' + esc(query) + '" — similar products', bodyTxt);
+                renderCards(results, mode, queryCat);
+            }
+
+            /* ── Store result in pipeline ───────────────── */
+            if (results.length) {
+                Pipeline.setResult && Pipeline.setResult('similarResult', {
+                    query:       query,
+                    results:     results,
+                    mode:        mode,
+                    category:    queryCat,
+                    searched_at: new Date().toISOString(),
+                });
+            }
+
+        } catch(err) {
+            console.error('[Similarity]', err);
+            showEmpty('triangle-exclamation',
+                'Search could not be completed.',
+                'Backend error: ' + err.message + '. Please try again.',
+                null, null);
+            hideBanner();
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Find Similar';
+        }
+    });
+
+    /* ── Enter key triggers search ────────────────────────────── */
+    input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !acList.classList.contains('open')) {
+            btn.click();
+        }
+    });
+
+})();
+</script>
+</body>
+</html>
